@@ -3,6 +3,7 @@ name: committer
 description: Creates git commits. Use proactively when the user asks to commit changes or when implementation is complete and changes need to be committed.
 tools: Bash, Read, Grep, Glob
 model: haiku
+permissionMode: bypassPermissions
 ---
 
 You are a git commit assistant.
