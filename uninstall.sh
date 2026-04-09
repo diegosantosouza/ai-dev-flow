@@ -3,6 +3,7 @@ set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "$0")" && pwd)"
 CLAUDE_DIR="$HOME/.claude"
+SETTINGS_FILE="$CLAUDE_DIR/settings.json"
 
 echo "ai-dev-flow uninstaller"
 echo ""
@@ -46,6 +47,23 @@ done
 echo ""
 echo "CLAUDE.md:"
 unlink_file "$REPO_DIR/.CLAUDE.md.rendered" "$CLAUDE_DIR/CLAUDE.md"
+
+# --- settings.json (remove model) ---
+
+echo ""
+echo "settings:"
+
+if [ -f "$SETTINGS_FILE" ] && command -v jq &>/dev/null; then
+  CURRENT_MODEL=$(jq -r '.model // empty' "$SETTINGS_FILE")
+  if [ "$CURRENT_MODEL" = "opusplan" ]; then
+    jq 'del(.model)' "$SETTINGS_FILE" > "$SETTINGS_FILE.tmp" && mv "$SETTINGS_FILE.tmp" "$SETTINGS_FILE"
+    echo "  removed model (was opusplan)"
+  else
+    echo "  skip   model (not set by ai-dev-flow)"
+  fi
+else
+  echo "  skip   settings.json (not found or jq unavailable)"
+fi
 
 echo ""
 echo "done."
