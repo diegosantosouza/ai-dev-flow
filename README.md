@@ -88,8 +88,8 @@ Model selection is intentional, not arbitrary:
 ## Installation
 
 ```bash
-git clone https://github.com/gandarfh/ai-dev-flow.git ~/gandarfh/ai-dev-flow
-cd ~/gandarfh/ai-dev-flow
+git clone https://github.com/gandarfh/ai-dev-flow.git
+cd ai-dev-flow
 chmod +x install.sh uninstall.sh
 ./install.sh
 ```
@@ -107,7 +107,7 @@ To remove:
 Copy the template into your project root and customize it:
 
 ```bash
-cp ~/gandarfh/ai-dev-flow/CLAUDE.md.template ./CLAUDE.md
+cp path/to/ai-dev-flow/CLAUDE.md.template ./CLAUDE.md
 ```
 
 Edit the file to define your stack, conventions, testing rules, and current focus. Claude Code reads this file automatically when you open the project.
