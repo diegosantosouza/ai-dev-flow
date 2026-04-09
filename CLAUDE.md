@@ -10,7 +10,7 @@ For any non-trivial task, follow the 3-phase cycle:
 
 ## Available Subagents
 
-- `architect` (sonnet, read-only, persistent memory, web access + context7) — research algorithms, patterns, libraries and architectures BEFORE implementing. Must be consulted before brute-forcing any solution.
+- `architect` (opus, read-only, persistent memory, web access + context7) — research algorithms, patterns, libraries and architectures BEFORE implementing. Must be consulted before brute-forcing any solution.
 - `researcher` (haiku, read-only, persistent memory) — research codebase structure, files, and conventions
 - `test-runner` (haiku, read-only) — run tests and report concise results
 - `code-reviewer` (sonnet, read-only, persistent memory) — review code after changes

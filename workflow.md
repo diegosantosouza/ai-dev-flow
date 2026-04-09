@@ -134,15 +134,17 @@ Cada um tem seu próprio system prompt, ferramentas permitidas e modelo.
 
 ### Agents configurados
 
-| Agent | Modelo | Ferramentas | Memória | Quando usar |
-|-------|--------|-------------|---------|-------------|
-| `architect` | sonnet | Read-only + Web + Context7 | Sim (user) | Antes de implementar, pesquisar solução certa |
-| `researcher` | haiku | Read-only | Sim (user) | Mapear codebase, arquivos e convenções |
-| `test-runner` | haiku | Bash + Read (bypassPermissions) | Não | Rodar testes sem interrupção |
-| `code-reviewer` | sonnet | Read-only | Sim (user) | Revisar qualidade após mudanças |
-| `debugger` | sonnet | Read-only + Bash | Não | Diagnosticar bugs e root causes |
-| `doc-writer` | haiku | Read + Write | Não | Criar/atualizar documentação |
-| `committer` | haiku | Bash + Read | Não | Criar commits descritivos |
+| Agent | Modelo | Esforço | Permissões | Memória | Quando usar |
+|-------|--------|---------|------------|---------|-------------|
+| `architect` | opus | alto | Read-only + Web + Context7 | Sim (user) | Antes de implementar, pesquisar solução certa |
+| `researcher` | haiku | baixo | Read-only | Sim (user) | Mapear codebase, arquivos e convenções |
+| `test-runner` | haiku | baixo | Bash + Read (bypassPermissions) | Não | Rodar testes sem interrupção |
+| `code-reviewer` | sonnet | médio | Read-only | Sim (user) | Revisar qualidade após mudanças |
+| `debugger` | sonnet | alto | Read-only + Bash | Não | Diagnosticar bugs e root causes |
+| `doc-writer` | haiku | baixo | Read + Write (acceptEdits) | Não | Criar/atualizar documentação |
+| `committer` | haiku | baixo | Bash + Read (bypassPermissions) | Não | Criar commits descritivos |
+
+> **Sessão principal usa `opusplan`**: opus durante `/plan` (decisões importam), sonnet durante `/implement` (execução).
 
 ### Anatomia de um subagent
 
@@ -152,6 +154,8 @@ name: researcher
 description: Quando usar este agent (Claude lê isso para decidir)
 tools: Read, Grep, Glob, Bash       # Ferramentas permitidas
 model: haiku                         # haiku | sonnet | opus | inherit
+effort: low                          # high | medium | low — profundidade de raciocínio
+maxTurns: 10                         # Limite de turnos antes de parar
 memory: user                         # user | project | local
 background: false                    # true = roda em paralelo
 permissionMode: default              # default | acceptEdits | dontAsk | plan
@@ -179,6 +183,7 @@ System prompt do agent vai aqui em Markdown.
 | `skills` | Skills pré-carregadas no contexto do agent |
 | `hooks` | Hooks que rodam apenas enquanto este agent está ativo |
 | `maxTurns` | Limite de turnos antes de parar |
+| `effort` | Profundidade de raciocínio: `high` (pensa mais), `medium`, `low` (responde rápido) |
 
 ### Modelos e quando usar cada um
 
@@ -188,6 +193,23 @@ System prompt do agent vai aqui em Markdown.
 | **sonnet** | Médio | Médio | Code review, análise, implementação moderada |
 | **opus** | Alto | Lento | Arquitetura, raciocínio complexo |
 | **inherit** | (herda) | (herda) | Quando quer o mesmo modelo da sessão principal |
+
+### Estratégia de custo por fase
+
+A escolha de modelo para cada agent não é arbitrária:
+
+- **opus → `architect`**: decisões arquiteturais são caras de desfazer. O custo do modelo é irrelevante comparado ao custo de reconstruir sobre fundação errada.
+- **sonnet → `code-reviewer`, `debugger`**: trabalho analítico que se beneficia de raciocínio forte, sem precisar do peso total do opus.
+- **haiku → `researcher`, `test-runner`, `doc-writer`, `committer`**: tarefas mecânicas onde velocidade importa mais que profundidade.
+- **`opusplan` na sessão principal**: usa opus durante o planejamento (onde as decisões pesam mais) e troca para sonnet durante a execução.
+
+| Fase | Agent | Custo |
+|------|-------|-------|
+| `/research` | `researcher` (haiku) | baixo |
+| `/plan` | `architect` (opus) | alto — vale a pena |
+| `/implement` | sessão principal (sonnet via opusplan) | médio |
+| `/review` | `code-reviewer` (sonnet) | médio |
+| `/commit` | `committer` (haiku) | baixo |
 
 ### Como criar novos agents
 

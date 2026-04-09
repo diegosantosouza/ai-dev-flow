@@ -42,17 +42,38 @@ The key insight: **verbose work happens in subagents** (research, tests, reviews
 
 ## Agents
 
-| Agent | Model | Purpose |
-|-------|-------|---------|
-| `researcher` | haiku | Maps codebase structure, files, patterns, and dependencies |
-| `architect` | sonnet | Researches algorithms, libraries, and design patterns before implementation |
-| `test-runner` | haiku | Runs tests and reports concise results |
-| `code-reviewer` | sonnet | Reviews code for quality, security, and best practices |
-| `debugger` | sonnet | Diagnoses bugs and finds root causes |
-| `doc-writer` | haiku | Creates and updates documentation |
-| `committer` | haiku | Creates properly formatted git commits |
+| Agent | Model | Effort | Purpose |
+|-------|-------|--------|---------|
+| `architect` | opus | high | Researches algorithms, libraries, and design patterns before implementation |
+| `code-reviewer` | sonnet | medium | Reviews code for quality, security, and best practices |
+| `debugger` | sonnet | high | Diagnoses bugs and finds root causes |
+| `researcher` | haiku | low | Maps codebase structure, files, patterns, and dependencies |
+| `test-runner` | haiku | low | Runs tests and reports concise results |
+| `doc-writer` | haiku | low | Creates and updates documentation |
+| `committer` | haiku | low | Creates properly formatted git commits |
 
 Agents with persistent memory (`researcher`, `architect`, `code-reviewer`) accumulate knowledge across sessions, getting better at understanding your codebase over time.
+
+Each agent has an **effort level** (high/medium/low) that controls reasoning depth, and a **maxTurns** limit that prevents runaway sessions. High-effort agents think longer before responding; low-effort agents prioritize speed.
+
+## Cost Optimization
+
+Model selection is intentional, not arbitrary:
+
+- **opus** for `architect` — architectural decisions are expensive to undo; the cost of a better model is negligible compared to the cost of rebuilding on the wrong foundation.
+- **sonnet** for `code-reviewer` and `debugger` — analytical work that benefits from strong reasoning without needing the full weight of opus.
+- **haiku** for `researcher`, `test-runner`, `doc-writer`, `committer` — mechanical tasks where speed matters more than depth.
+- **Main session uses `opusplan`** — Opus during `/plan` (decisions matter most here), Sonnet during `/implement` (execution is more mechanical).
+
+## Workflow Cost per Phase
+
+| Phase | Agent | Model tier |
+|-------|-------|------------|
+| `/research` | `researcher` | haiku (fast, cheap) |
+| `/plan` | `architect` | opus (expensive, worth it) |
+| `/implement` | main session | sonnet via `opusplan` (balanced) |
+| `/review` | `code-reviewer` | sonnet (balanced) |
+| `/commit` | `committer` | haiku (trivial) |
 
 ## Commands
 
@@ -107,21 +128,23 @@ AI: *immediately writes 500 lines of code*
 
 ```
 User: /research authentication patterns in this codebase
-  → researcher maps existing auth code, middleware, models
+  → researcher (haiku, low effort) maps existing auth code, middleware, models
   → human reviews: "we already have JWT utils in src/lib/"
 
 User: /plan add OAuth2 login with Google
-  → architect researches: passport.js vs arctic vs custom
+  → architect (opus, high effort) researches: passport.js vs arctic vs custom
   → presents trade-offs with documentation links
   → creates phased plan → human approves
 
 User: /implement
-  → Phase 1: Add OAuth routes → tests pass ✓
-  → Phase 2: Token exchange logic → tests pass ✓
-  → Phase 3: Session management → tests pass ✓
-  → code-reviewer checks quality ✓
+  → main session switches to sonnet (opusplan)
+  → Phase 1: Add OAuth routes → test-runner (haiku) validates ✓
+  → Phase 2: Token exchange logic → test-runner validates ✓
+  → Phase 3: Session management → test-runner validates ✓
+  → code-reviewer (sonnet, medium effort) checks quality ✓
 
 User: /commit
+  → committer (haiku, low effort) creates:
   → feat(auth): add Google OAuth2 login flow
 ```
 

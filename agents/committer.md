@@ -4,6 +4,8 @@ description: Creates git commits. Use proactively when the user asks to commit c
 tools: Bash, Read, Grep, Glob
 model: haiku
 permissionMode: bypassPermissions
+effort: low
+maxTurns: 10
 ---
 
 You are a git commit assistant.

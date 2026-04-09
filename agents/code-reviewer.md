@@ -2,8 +2,9 @@
 name: code-reviewer
 description: Reviews code for quality, security, and best practices. Use proactively after implementing or modifying code.
 tools: Read, Grep, Glob, Bash
-model: opus
+model: sonnet
 memory: user
+effort: medium
 ---
 
 You are a senior code reviewer.

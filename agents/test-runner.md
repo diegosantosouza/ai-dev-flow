@@ -4,6 +4,8 @@ description: Runs tests and reports results. Use proactively after implementing 
 tools: Bash, Read, Grep, Glob
 model: haiku
 permissionMode: bypassPermissions
+effort: low
+maxTurns: 15
 ---
 
 You are a test executor. Your job is to run tests and report concisely.
