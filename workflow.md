@@ -233,6 +233,16 @@ que sobrevive entre sessões. Útil para:
 - Lembrar decisões arquiteturais
 - Melhorar ao longo do tempo com experiência
 
+### Adaptive Thinking & Plan Mode (Claude 4.x)
+
+- Claude 4.x usa **adaptive thinking**: o modelo decide autonomamente quando
+  aprofundar o raciocínio com base na complexidade do prompt. A keyword
+  `ultrathink` só funciona na CLI Claude Code; não tem efeito em claude.ai.
+- **Plan Mode** (Shift+Tab duas vezes ou `/plan`) é read-only no nível da
+  ferramenta — mais robusto que convenção. Use-o antes de qualquer
+  implementação não-trivial para garantir revisão humana antes de qualquer
+  escrita de código.
+
 ---
 
 ## 4. Context Engineering
@@ -256,6 +266,9 @@ subagent. Apenas o resumo volta para a conversa principal.
 - Uma sessão = uma feature ou fix
 - Contexto limpo para cada unidade de trabalho
 - Não tente resolver tudo numa sessão gigante
+- Auto-compact entra com buffer de ~33K tokens (Claude Code 2.0.64+) —
+  use `/clear` ao trocar de feature para evitar compactação no meio de
+  raciocínio importante
 
 #### Documentos de contexto
 
@@ -343,4 +356,8 @@ Deploy → Usuários reais → Casos não previstos → Fix/Evolve → Deploy �
 - [Akita: Software Nunca Está Pronto](https://akitaonrails.com/2026/03/01/software-nunca-esta-pronto-4-projetos-a-vida-pos-deploy-e-por-que-one-shot-prompt-e-mito/)
 - [Akita: AI Jail — Sandbox para Agentes de IA](https://akitaonrails.com/2026/03/01/ai-jail-sandbox-para-agentes-de-ia-de-shell-script-a-ferramenta-real/)
 - [Anthropic: Effective Context Engineering for AI Agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
+- [Anthropic: Effective Harnesses for Long-Running Agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents)
+- [Anthropic: Multi-Agent Research System](https://www.anthropic.com/engineering/multi-agent-research-system)
+- [Anthropic: Advanced Tool Use](https://www.anthropic.com/engineering/advanced-tool-use)
+- [Anthropic: Adaptive Thinking](https://platform.claude.com/docs/en/build-with-claude/adaptive-thinking)
 - [Advanced Context Engineering for Coding Agents](https://github.com/humanlayer/advanced-context-engineering-for-coding-agents)

@@ -1,6 +1,6 @@
 ---
 name: doc-writer
-description: Technical documentation writer. Use when documentation needs to be created or updated — READMEs, API docs, architecture docs, or inline documentation.
+description: Technical documentation writer. Use proactively when documentation needs to be created or updated — READMEs, API docs, architecture docs, or inline documentation.
 tools: Read, Grep, Glob, Bash, Write, Edit
 model: haiku
 permissionMode: acceptEdits

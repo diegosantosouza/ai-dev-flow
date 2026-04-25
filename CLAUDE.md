@@ -16,6 +16,7 @@ For any non-trivial task, follow the 3-phase cycle:
 - `code-reviewer` (sonnet, read-only, persistent memory) — review code after changes
 - `debugger` (sonnet, read-only) — diagnose bugs, find root causes, recommend fixes
 - `doc-writer` (haiku, can write) — create or update documentation
+- `committer` (haiku, bypassPermissions) — create conventional git commits
 
 Use them proactively to preserve context in the main conversation.
 

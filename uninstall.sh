@@ -48,6 +48,10 @@ echo ""
 echo "CLAUDE.md:"
 unlink_file "$REPO_DIR/.CLAUDE.md.rendered" "$CLAUDE_DIR/CLAUDE.md"
 
+echo ""
+echo "hooks:"
+unlink_file "$REPO_DIR/scripts/pre-commit.sh" "$REPO_DIR/.git/hooks/pre-commit"
+
 # --- settings.json (remove model) ---
 
 echo ""

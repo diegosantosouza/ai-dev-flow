@@ -12,6 +12,12 @@
 - **Testing**: [e.g. Jest, RSpec, Go test]
 - **Deploy**: [e.g. Kamal, Vercel, Fly.io]
 
+## Workflow
+
+- For non-trivial tasks: `/research` → `/plan` → `/implement`.
+- Run `/review` before merging, `/commit` to ship.
+- Keep this file updated as the project evolves (Current Focus, Known Issues).
+
 ## Architecture
 
 [High-level project structure]

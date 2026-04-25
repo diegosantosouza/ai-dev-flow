@@ -147,22 +147,21 @@ if [ "$FINAL_MODEL" != "opusplan" ]; then
 fi
 
 # check agent frontmatter integrity
-for f in "$REPO_DIR"/agents/*.md; do
-  [ -f "$f" ] || continue
-  name="$(basename "$f")"
-  if ! head -1 "$f" | grep -q "^---$"; then
-    echo "  FAIL  agents/$name missing YAML frontmatter"
-    ERRORS=$((ERRORS + 1))
-  fi
-  if ! grep -q "^model:" "$f"; then
-    echo "  FAIL  agents/$name missing model field"
-    ERRORS=$((ERRORS + 1))
-  fi
-  if ! grep -q "^effort:" "$f"; then
-    echo "  FAIL  agents/$name missing effort field"
-    ERRORS=$((ERRORS + 1))
-  fi
-done
+if ! bash "$REPO_DIR/scripts/validate-agents.sh" "$REPO_DIR/agents"; then
+  ERRORS=$((ERRORS + 1))
+fi
+
+# install pre-commit hook
+echo ""
+echo "hooks:"
+HOOK_SOURCE="$REPO_DIR/scripts/pre-commit.sh"
+HOOK_TARGET="$REPO_DIR/.git/hooks/pre-commit"
+if [ -d "$REPO_DIR/.git/hooks" ]; then
+  chmod +x "$HOOK_SOURCE"
+  link_file "$HOOK_SOURCE" "$HOOK_TARGET"
+else
+  echo "  skip  pre-commit hook (no .git/hooks directory)"
+fi
 
 if [ "$ERRORS" -gt 0 ]; then
   echo ""
