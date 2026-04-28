@@ -1,0 +1,132 @@
+{
+  "title": "{{SERVICE_PASCAL}} — Crons",
+  "uid": null,
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "1m",
+  "time": { "from": "now-6h", "to": "now" },
+  "timezone": "browser",
+  "tags": ["{{SERVICE_NAME}}", "cron"],
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "label": "Datasource",
+        "hide": 0,
+        "refresh": 1,
+        "current": {}
+      },
+      {
+        "name": "cron",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "query": "label_values({{SERVICE_NAME}}_cron_run_total, {{SERVICE_NAME}}_cron_name)",
+        "label": "Cron",
+        "includeAll": true,
+        "allValue": ".+",
+        "multi": true,
+        "refresh": 2,
+        "sort": 1,
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "table",
+      "title": "Status dos Crons — Últimas 24h",
+      "description": "Execuções por cron e outcome. Linha ausente = cron não rodou (heartbeat missing). Label {{SERVICE_NAME}}.cron.name → {{SERVICE_NAME}}_cron_name.",
+      "gridPos": { "x": 0, "y": 0, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": { "custom": { "displayMode": "auto" } }
+      },
+      "options": { "sortBy": [{ "displayName": "Cron" }] },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum by ({{SERVICE_NAME}}_cron_name, outcome)(increase({{SERVICE_NAME}}_cron_run_total{{{SERVICE_NAME}}_cron_name=~\"$cron\"}[24h]))",
+          "legendFormat": "{{ {{SERVICE_NAME}}_cron_name }} / {{ outcome }}",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        { "id": "organize", "options": { "renameByName": { "{{SERVICE_NAME}}_cron_name": "Cron", "outcome": "Outcome", "Value": "Execuções (24h)" } } }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "table",
+      "title": "Duração Média por Cron (últimos 30min)",
+      "description": "Duração média de execução por cron. Histograma unit=ms → {{SERVICE_NAME}}_cron_run_duration_milliseconds_{sum,count}.",
+      "gridPos": { "x": 12, "y": 0, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": { "displayMode": "auto" }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "max by ({{SERVICE_NAME}}_cron_name)(rate({{SERVICE_NAME}}_cron_run_duration_milliseconds_sum{{{SERVICE_NAME}}_cron_name=~\"$cron\"}[30m]) / rate({{SERVICE_NAME}}_cron_run_duration_milliseconds_count{{{SERVICE_NAME}}_cron_name=~\"$cron\"}[30m]))",
+          "legendFormat": "{{ {{SERVICE_NAME}}_cron_name }}",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        { "id": "organize", "options": { "renameByName": { "{{SERVICE_NAME}}_cron_name": "Cron", "Value": "Duração Média (ms)" } } }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "Itens Processados por Outcome (itens/s)",
+      "description": "Taxa de itens processados pelos crons. Label {{SERVICE_NAME}}.resource.type → {{SERVICE_NAME}}_resource_type.",
+      "gridPos": { "x": 0, "y": 8, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        },
+        "overrides": [
+          { "matcher": { "id": "byRegexp", "options": ".*failure.*" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] },
+          { "matcher": { "id": "byRegexp", "options": ".*success.*" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum by ({{SERVICE_NAME}}_cron_name, outcome)(rate({{SERVICE_NAME}}_cron_items_processed_total{{{SERVICE_NAME}}_cron_name=~\"$cron\"}[5m]))",
+          "legendFormat": "{{ {{SERVICE_NAME}}_cron_name }} / {{ outcome }}"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "p95 Duração por Cron (ms)",
+      "description": "Percentil 95 da duração de execução de cada cron ao longo do tempo",
+      "gridPos": { "x": 12, "y": 8, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": { "lineWidth": 2, "fillOpacity": 5 }
+        }
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "histogram_quantile(0.95, sum by (le, {{SERVICE_NAME}}_cron_name)(rate({{SERVICE_NAME}}_cron_run_duration_milliseconds_bucket{{{SERVICE_NAME}}_cron_name=~\"$cron\"}[1h])))",
+          "legendFormat": "p95 {{ {{SERVICE_NAME}}_cron_name }}"
+        }
+      ]
+    }
+  ]
+}

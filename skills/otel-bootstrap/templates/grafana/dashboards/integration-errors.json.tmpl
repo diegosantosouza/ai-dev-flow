@@ -1,0 +1,202 @@
+{
+  "title": "{{SERVICE_PASCAL}} — Integration Errors",
+  "uid": null,
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "tags": ["{{SERVICE_NAME}}", "integrations", "innovaro", "vmpay"],
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "label": "Datasource",
+        "hide": 0,
+        "refresh": 1,
+        "current": {}
+      },
+      {
+        "name": "marketplace",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "query": "label_values({{SERVICE_NAME}}_integration_request_errors_total, {{SERVICE_NAME}}_marketplace)",
+        "label": "Marketplace",
+        "includeAll": true,
+        "allValue": ".+",
+        "multi": false,
+        "refresh": 2,
+        "sort": 1,
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Erros de Integração/s (5m)",
+      "description": "Taxa total de erros em chamadas externas por segundo nos últimos 5 min",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.1 },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(rate({{SERVICE_NAME}}_integration_request_errors_total{{{SERVICE_NAME}}_marketplace=~\"$marketplace\"}[5m]))",
+          "legendFormat": "Erros/s",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Erros Innovaro (1h)",
+      "description": "Total de erros nas chamadas à API Innovaro na última hora",
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 50 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(increase({{SERVICE_NAME}}_integration_request_errors_total{{{SERVICE_NAME}}_marketplace=\"innovaro\"}[1h]))",
+          "legendFormat": "Innovaro (1h)",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Erros VMPay (1h)",
+      "description": "Total de erros nas chamadas à API VMPay na última hora",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "short",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 50 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(increase({{SERVICE_NAME}}_integration_request_errors_total{{{SERVICE_NAME}}_marketplace=\"vmpay\"}[1h]))",
+          "legendFormat": "VMPay (1h)",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Erros/s por Marketplace e HTTP Status",
+      "description": "Taxa de erros nas integrações por marketplace e código HTTP. Label http.response.status_code → http_response_status_code.",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        }
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum by ({{SERVICE_NAME}}_marketplace, http_response_status_code)(rate({{SERVICE_NAME}}_integration_request_errors_total{{{SERVICE_NAME}}_marketplace=~\"$marketplace\"}[5m]))",
+          "legendFormat": "{{ {{SERVICE_NAME}}_marketplace }} HTTP {{ http_response_status_code }}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "p95 Latência HTTP Client por Host Externo (s)",
+      "description": "Auto-instrumentação do Node OTel: http_client_request_duration_seconds_bucket. Usa SEGUNDOS (não ms) — convenção das auto-instrumentações.",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": { "lineWidth": 2, "fillOpacity": 5 }
+        }
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "histogram_quantile(0.95, sum by (le, server_address)(rate(http_client_request_duration_seconds_bucket[5m])))",
+          "legendFormat": "p95 {{ server_address }}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "table",
+      "title": "Top Error Types por Marketplace (última hora)",
+      "description": "Os 10 tipos de erro mais frequentes nas integrações externas. Label error.type → error_type.",
+      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 8 },
+      "fieldConfig": {
+        "defaults": { "custom": { "displayMode": "auto" } }
+      },
+      "options": { "sortBy": [{ "displayName": "Erros (1h)", "desc": true }] },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "topk(10, sum by (error_type, {{SERVICE_NAME}}_marketplace)(increase({{SERVICE_NAME}}_integration_request_errors_total{{{SERVICE_NAME}}_marketplace=~\"$marketplace\"}[1h])))",
+          "legendFormat": "{{ {{SERVICE_NAME}}_marketplace }} / {{ error_type }}",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        { "id": "organize", "options": { "renameByName": { "{{SERVICE_NAME}}_marketplace": "Marketplace", "error_type": "Error Type", "Value": "Erros (1h)" } } }
+      ]
+    }
+  ]
+}

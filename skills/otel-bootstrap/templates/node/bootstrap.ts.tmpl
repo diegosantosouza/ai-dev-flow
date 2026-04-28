@@ -1,0 +1,3 @@
+import { startTracer } from './tracer';
+
+startTracer(process.env.OTEL_SERVICE_NAME ?? '{{SERVICE_NAME}}');

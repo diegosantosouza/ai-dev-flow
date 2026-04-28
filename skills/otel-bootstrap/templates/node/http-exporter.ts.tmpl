@@ -1,0 +1,19 @@
+import { OTLPLogExporter as HttpLogExporterCtor } from '@opentelemetry/exporter-logs-otlp-http';
+import { OTLPMetricExporter as HttpMetricExporterCtor } from '@opentelemetry/exporter-metrics-otlp-http';
+import { OTLPTraceExporter as HttpTraceExporterCtor } from '@opentelemetry/exporter-trace-otlp-http';
+
+const httpEndpoint =
+  process.env.OTEL_EXPORTER_OTLP_ENDPOINT_HTTP || 'http://localhost:4318';
+
+const httpTraceExporterUrl = `${httpEndpoint.replace(/\/$/, '')}/v1/traces`;
+const httpMetricExporterUrl = `${httpEndpoint.replace(/\/$/, '')}/v1/metrics`;
+const httpLogExporterUrl = `${httpEndpoint.replace(/\/$/, '')}/v1/logs`;
+
+export {
+  HttpLogExporterCtor,
+  HttpMetricExporterCtor,
+  HttpTraceExporterCtor,
+  httpLogExporterUrl,
+  httpMetricExporterUrl,
+  httpTraceExporterUrl,
+};

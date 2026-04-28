@@ -1,0 +1,51 @@
+import { type Counter, type Histogram } from '@opentelemetry/api';
+import { {{SERVICE_UPPER}}_ATTR, MESSAGING_ATTR } from '@/shared/tracer/attributes';
+import { METRIC_NAMES } from '@/shared/tracer/instrument-names';
+import { BaseMetrics, type Labels } from './base-metrics';
+
+interface RecordConsumedParams {
+  subscription: string;
+  consumer: string;
+  outcome: 'ack' | 'nack';
+  durationMs: number;
+  resourceType?: string;
+  errorType?: string;
+}
+
+export class PubSubMetrics extends BaseMetrics {
+  private static _instance: PubSubMetrics;
+
+  protected counter: Counter;
+  protected histogram: Histogram;
+
+  private constructor() {
+    super();
+    this.counter = this.meter.createCounter(METRIC_NAMES.MESSAGING_CONSUMED, {
+      description: 'Number of consumed Pub/Sub messages',
+    });
+    this.histogram = this.meter.createHistogram(METRIC_NAMES.MESSAGING_PROCESS_DURATION, {
+      description: 'Duration of Pub/Sub message processing',
+      unit: 'ms',
+    });
+  }
+
+  static get instance(): PubSubMetrics {
+    if (!PubSubMetrics._instance) {
+      PubSubMetrics._instance = new PubSubMetrics();
+    }
+    return PubSubMetrics._instance;
+  }
+
+  recordConsumed({ subscription, consumer, outcome, durationMs, resourceType, errorType }: RecordConsumedParams): void {
+    const labels: Labels = {
+      [MESSAGING_ATTR.SYSTEM]: 'gcp_pubsub',
+      [MESSAGING_ATTR.DESTINATION_NAME]: subscription,
+      [{{SERVICE_UPPER}}_ATTR.CONSUMER]: consumer,
+      outcome,
+      ...(resourceType && { [{{SERVICE_UPPER}}_ATTR.RESOURCE_TYPE]: resourceType }),
+      ...(errorType && { [{{SERVICE_UPPER}}_ATTR.ERROR_TYPE]: errorType }),
+    };
+    this.counter.add(1, labels);
+    this.histogram.record(durationMs, labels);
+  }
+}

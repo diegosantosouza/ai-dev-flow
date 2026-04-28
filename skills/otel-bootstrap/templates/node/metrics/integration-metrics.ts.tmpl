@@ -1,0 +1,35 @@
+import { {{SERVICE_UPPER}}_ATTR } from '../attributes';
+import { METRIC_NAMES } from '../instrument-names';
+import { BaseMetrics } from './base-metrics';
+
+export class IntegrationMetrics extends BaseMetrics {
+  private static _instance: IntegrationMetrics;
+
+  constructor() {
+    super();
+    this.counter = this.meter.createCounter(METRIC_NAMES.INTEGRATION_REQUEST_ERRORS, {
+      description: 'Number of failed external integration API requests',
+    });
+  }
+
+  static get instance(): IntegrationMetrics {
+    if (!IntegrationMetrics._instance) {
+      IntegrationMetrics._instance = new IntegrationMetrics();
+    }
+    return IntegrationMetrics._instance;
+  }
+
+  recordError(input: {
+    target: string;
+    statusCode?: number;
+    errorType: string;
+  }): void {
+    this.counter?.add(1, {
+      '{{SERVICE_NAME}}.integration.target': input.target,
+      ...(input.statusCode !== undefined && {
+        'http.response.status_code': input.statusCode,
+      }),
+      [{{SERVICE_UPPER}}_ATTR.ERROR_TYPE]: input.errorType,
+    });
+  }
+}

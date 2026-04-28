@@ -1,0 +1,18 @@
+export const METRIC_NAMES = {
+  MESSAGING_CONSUMED: '{{SERVICE_PREFIX}}messaging.consumed.messages',
+  MESSAGING_PROCESS_DURATION: '{{SERVICE_PREFIX}}messaging.process.duration',
+
+  CRON_RUN: '{{SERVICE_PREFIX}}cron.run',
+  CRON_RUN_DURATION: '{{SERVICE_PREFIX}}cron.run.duration',
+  CRON_ITEMS_PROCESSED: '{{SERVICE_PREFIX}}cron.items.processed',
+
+  INTEGRATION_REQUEST_ERRORS: '{{SERVICE_PREFIX}}integration.request.errors',
+} as const;
+
+export const spanNames = {
+  usecase: (module: string, name: string) => `usecase.${module}.${name}`,
+  integration: (target: string, op: string) => `${target}.${op}`,
+  cron: (name: string) => `cron ${name}`,
+  consumer: (subscription: string) => `${subscription} process`,
+  publish: (topic: string) => `${topic} publish`,
+} as const;

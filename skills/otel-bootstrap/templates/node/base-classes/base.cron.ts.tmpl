@@ -1,0 +1,66 @@
+import { context, SpanKind, SpanStatusCode, trace } from '@opentelemetry/api';
+import { {{SERVICE_UPPER}}_ATTR } from '@/shared/tracer/attributes';
+import { CronMetrics } from '@/shared/tracer/metrics/cron-metrics';
+import { spanNames } from '@/shared/tracer/instrument-names';
+import { stopTracer } from '@/shared/tracer/tracer';
+import Log from '@/shared/logger/log';
+
+abstract class BaseCron {
+  protected abstract cronName: string;
+
+  protected abstract handle(): Promise<void>;
+
+  public async start(): Promise<void> {
+    Log.info(`Starting execution of ${this.cronName} CronJob.`);
+
+    const startTime = Date.now();
+    const span = trace.getTracer(this.cronName).startSpan(
+      spanNames.cron(this.cronName),
+      { kind: SpanKind.INTERNAL }
+    );
+
+    let caughtError: unknown;
+
+    try {
+      await context.with(trace.setSpan(context.active(), span), () => this.handle());
+      Log.info(`Finalized execution of ${this.cronName} CronJob`);
+    } catch (err) {
+      caughtError = err;
+    } finally {
+      const durationMs = Date.now() - startTime;
+
+      if (caughtError) {
+        const error = caughtError instanceof Error ? caughtError : new Error(String(caughtError));
+        const errorType = (caughtError as any)?.code ?? error.name;
+
+        span.recordException(error);
+        span.setStatus({ code: SpanStatusCode.ERROR });
+        span.setAttribute({{SERVICE_UPPER}}_ATTR.ERROR_TYPE, errorType);
+        CronMetrics.instance.recordRun({
+          cron: this.cronName,
+          outcome: 'failure',
+          durationMs,
+          errorType,
+        });
+
+        Log.error(`Error executing ${this.cronName} CronJob`, {
+          event: `[${this.cronName}:cron:error]`,
+          errorMessage: caughtError instanceof Error ? caughtError.message : String(caughtError),
+        });
+      } else {
+        span.setStatus({ code: SpanStatusCode.OK });
+        CronMetrics.instance.recordRun({
+          cron: this.cronName,
+          outcome: 'success',
+          durationMs,
+        });
+      }
+
+      span.end();
+      await stopTracer();
+      process.exit(caughtError ? 1 : 0);
+    }
+  }
+}
+
+export default BaseCron;

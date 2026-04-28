@@ -1,0 +1,85 @@
+// v0.1 — validate against a real Go service before using in production
+package otel
+
+import (
+	"context"
+	"time"
+
+	"cloud.google.com/go/pubsub"
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
+	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
+)
+
+// RecordPubSubMessage records a processed Pub/Sub message (ack or nack).
+// Call after processing a message inside subscription.Receive.
+//
+// Example usage:
+//
+//	sub.Receive(ctx, func(ctx context.Context, msg *pubsub.Message) {
+//	    start := time.Now()
+//	    err := processMessage(ctx, msg)
+//	    outcome := "ack"
+//	    if err != nil {
+//	        outcome = "nack"
+//	        msg.Nack()
+//	    } else {
+//	        msg.Ack()
+//	    }
+//	    otel.RecordPubSubMessage(ctx, sub.ID(), "MyConsumer", outcome, time.Since(start), err)
+//	})
+func RecordPubSubMessage(
+	ctx context.Context,
+	subscription string,
+	consumer string,
+	outcome string, // "ack" | "nack"
+	duration time.Duration,
+	err error,
+) {
+	tracer := otel.Tracer(consumer)
+	_, span := tracer.Start(ctx, subscription+" process")
+	defer span.End()
+
+	span.SetAttributes(
+		semconv.MessagingSystemGCPPubsub,
+		attribute.String("messaging.operation.type", "process"),
+		attribute.String("messaging.destination.name", subscription),
+		attribute.String(serviceName+".consumer", consumer),
+		attribute.String("outcome", outcome),
+	)
+
+	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+	} else {
+		span.SetStatus(codes.Ok, "")
+	}
+
+	counter, _ := Meter().Int64Counter(
+		serviceName+".messaging.consumed.messages",
+		metric.WithDescription("Number of consumed Pub/Sub messages"),
+	)
+	counter.Add(ctx, 1,
+		metric.WithAttributes(
+			attribute.String("messaging.system", "gcp_pubsub"),
+			attribute.String("messaging.destination.name", subscription),
+			attribute.String(serviceName+".consumer", consumer),
+			attribute.String("outcome", outcome),
+		),
+	)
+
+	histogram, _ := Meter().Float64Histogram(
+		serviceName+".messaging.process.duration",
+		metric.WithDescription("Duration of Pub/Sub message processing"),
+		metric.WithUnit("ms"),
+	)
+	histogram.Record(ctx, float64(duration.Milliseconds()),
+		metric.WithAttributes(
+			attribute.String("messaging.destination.name", subscription),
+			attribute.String(serviceName+".consumer", consumer),
+			attribute.String("outcome", outcome),
+		),
+	)
+}

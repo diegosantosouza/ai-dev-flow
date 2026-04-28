@@ -1,0 +1,199 @@
+apiVersion: 1
+groups:
+  - orgId: 1
+    name: {{SERVICE_PASCAL}} — Sync
+    folder: {{SERVICE_PASCAL}}
+    interval: 1m
+    rules:
+      - uid: {{SERVICE_NAME}}-sync-failure-rate-high
+        title: {{SERVICE_PASCAL}}SyncFailureRateHigh
+        condition: C
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                sum by ({{SERVICE_NAME}}_marketplace, {{SERVICE_NAME}}_resource_type)(
+                  rate({{SERVICE_NAME}}_sync_runs_total{outcome="failure"}[5m])
+                )
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            queryType: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                sum by ({{SERVICE_NAME}}_marketplace, {{SERVICE_NAME}}_resource_type)(
+                  rate({{SERVICE_NAME}}_sync_runs_total[5m])
+                )
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0.2]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [C]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: $A / $B
+              type: math
+              refId: C
+        noDataState: NoData
+        execErrState: Error
+        for: 10m
+        annotations:
+          summary: "Falha de sync >20% em {{ $labels.{{SERVICE_NAME}}_marketplace }} / {{ $labels.{{SERVICE_NAME}}_resource_type }}"
+          description: "Taxa de falha de sync está em {{ $value | humanizePercentage }} para o marketplace {{ $labels.{{SERVICE_NAME}}_marketplace }} e resource type {{ $labels.{{SERVICE_NAME}}_resource_type }}. Verificar logs e traces do {{SERVICE_NAME}}."
+        labels:
+          service: {{SERVICE_NAME}}
+          team: housi-marketplaces
+          severity: critical
+
+      - uid: {{SERVICE_NAME}}-consumer-nack-rate-high
+        title: {{SERVICE_PASCAL}}ConsumerNackRateHigh
+        condition: C
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                sum by (messaging_destination_name)(
+                  rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome="nack"}[5m])
+                )
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+          - refId: B
+            queryType: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                sum by (messaging_destination_name)(
+                  rate({{SERVICE_NAME}}_messaging_consumed_messages_total[5m])
+                )
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: B
+          - refId: C
+            datasourceUid: __expr__
+            model:
+              conditions:
+                - evaluator:
+                    params: [0.1]
+                    type: gt
+                  operator:
+                    type: and
+                  query:
+                    params: [C]
+                  reducer:
+                    type: last
+                  type: query
+              datasource:
+                type: __expr__
+                uid: __expr__
+              expression: $A / $B
+              type: math
+              refId: C
+        noDataState: NoData
+        execErrState: Error
+        for: 10m
+        annotations:
+          summary: "Nack rate >10% em {{ $labels.messaging_destination_name }}"
+          description: "A subscription {{ $labels.messaging_destination_name }} está com {{ $value | humanizePercentage }} de mensagens sendo nacked. Possível bug no consumer ou payload inválido recorrente."
+        labels:
+          service: {{SERVICE_NAME}}
+          team: housi-marketplaces
+          severity: critical
+
+  - orgId: 1
+    name: {{SERVICE_PASCAL}} — Crons & Integrations
+    folder: {{SERVICE_PASCAL}}
+    interval: 1m
+    rules:
+      - uid: {{SERVICE_NAME}}-cron-heartbeat-missing
+        title: {{SERVICE_PASCAL}}CronHeartbeatMissing
+        condition: A
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange:
+              from: 7200
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                absent_over_time({{SERVICE_NAME}}_cron_run_total[2h])
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+        noDataState: OK
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: "Cron {{ $labels.{{SERVICE_NAME}}_cron_name }} não executou nas últimas 2h"
+          description: "Nenhuma execução registrada para o cron {{ $labels.{{SERVICE_NAME}}_cron_name }} nas últimas 2 horas. Verificar se o job está agendado e se o processo do cron está rodando."
+        labels:
+          service: {{SERVICE_NAME}}
+          team: housi-marketplaces
+          severity: warning
+
+      - uid: {{SERVICE_NAME}}-integration-error-spike
+        title: {{SERVICE_PASCAL}}IntegrationErrorSpike
+        condition: A
+        data:
+          - refId: A
+            queryType: ""
+            relativeTimeRange:
+              from: 300
+              to: 0
+            datasourceUid: prometheus
+            model:
+              expr: |
+                sum by ({{SERVICE_NAME}}_marketplace)(
+                  rate({{SERVICE_NAME}}_integration_request_errors_total[5m])
+                ) > 1
+              instant: true
+              intervalMs: 1000
+              maxDataPoints: 43200
+              refId: A
+        noDataState: NoData
+        execErrState: Error
+        for: 5m
+        annotations:
+          summary: "Spike de erros em {{ $labels.{{SERVICE_NAME}}_marketplace }}: {{ $value | humanize }} erros/s"
+          description: "A integração com {{ $labels.{{SERVICE_NAME}}_marketplace }} está registrando mais de 1 erro/s por 5 minutos. Possível instabilidade na API externa ou problema de autenticação."
+        labels:
+          service: {{SERVICE_NAME}}
+          team: housi-marketplaces
+          severity: warning

@@ -1,0 +1,19 @@
+import { OTLPLogExporter as GrpcLogExporterCtor } from '@opentelemetry/exporter-logs-otlp-grpc';
+import { OTLPMetricExporter as GrpcMetricExporterCtor } from '@opentelemetry/exporter-metrics-otlp-grpc';
+import { OTLPTraceExporter as GrpcTraceExporterCtor } from '@opentelemetry/exporter-trace-otlp-grpc';
+
+const grpcEndpoint =
+  process.env.OTEL_EXPORTER_OTLP_ENDPOINT_GRPC || 'localhost:4317';
+
+const grpcTraceExporterUrl = grpcEndpoint;
+const grpcMetricExporterUrl = grpcEndpoint;
+const grpcLogExporterUrl = grpcEndpoint;
+
+export {
+  GrpcLogExporterCtor,
+  GrpcMetricExporterCtor,
+  GrpcTraceExporterCtor,
+  grpcLogExporterUrl,
+  grpcMetricExporterUrl,
+  grpcTraceExporterUrl,
+};

@@ -1,0 +1,22 @@
+// v0.1 — validate against a real Go service before using in production
+package otel
+
+import (
+	"net/http"
+
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+)
+
+// HTTPMiddleware wraps an http.Handler with OpenTelemetry instrumentation.
+// It records http.server.request.duration (histogram) and propagates trace context.
+//
+// Usage in main:
+//
+//	mux := http.NewServeMux()
+//	mux.HandleFunc("/orders/{id}", ordersHandler)
+//	http.ListenAndServe(":8080", otel.HTTPMiddleware(mux))
+func HTTPMiddleware(next http.Handler) http.Handler {
+	return otelhttp.NewHandler(next, "{{SERVICE_NAME}}",
+		otelhttp.WithMessageEvents(otelhttp.ReadEvents, otelhttp.WriteEvents),
+	)
+}

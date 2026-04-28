@@ -1,0 +1,20 @@
+export const {{SERVICE_UPPER}}_ATTR = {
+  OPERATION: '{{SERVICE_NAME}}.operation',
+  RESOURCE_TYPE: '{{SERVICE_NAME}}.resource.type',
+  RESOURCE_ID: '{{SERVICE_NAME}}.resource.id',
+  CORRELATION_ID: '{{SERVICE_NAME}}.correlation_id',
+  CONSUMER: '{{SERVICE_NAME}}.consumer',
+  CRON_NAME: '{{SERVICE_NAME}}.cron.name',
+  TRIGGER: '{{SERVICE_NAME}}.trigger',
+  OUTCOME: '{{SERVICE_NAME}}.outcome',
+  ERROR_TYPE: 'error.type',
+} as const;
+
+export const MESSAGING_ATTR = {
+  SYSTEM: 'messaging.system',
+  OPERATION_TYPE: 'messaging.operation.type',
+  DESTINATION_NAME: 'messaging.destination.name',
+  MESSAGE_ID: 'messaging.message.id',
+  ORDERING_KEY: 'messaging.gcp_pubsub.message.ordering_key',
+  BATCH_MESSAGE_COUNT: 'messaging.batch.message_count',
+} as const;

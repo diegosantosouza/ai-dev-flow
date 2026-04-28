@@ -1,0 +1,42 @@
+// v0.1 — validate against a real Go service before using in production
+package otel
+
+import (
+	"context"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/metric"
+)
+
+const serviceName = "{{SERVICE_NAME}}"
+
+// Meter returns the global meter for this service.
+func Meter() metric.Meter {
+	return otel.Meter(serviceName)
+}
+
+// Attrs converts a flat list of key-value pairs into OTel attributes.
+// Usage: Attrs("outcome", "success", "error.type", "Timeout")
+func Attrs(kvs ...string) []attribute.KeyValue {
+	attrs := make([]attribute.KeyValue, 0, len(kvs)/2)
+	for i := 0; i+1 < len(kvs); i += 2 {
+		attrs = append(attrs, attribute.String(kvs[i], kvs[i+1]))
+	}
+	return attrs
+}
+
+// RecordIntegrationError records a failed call to an external API.
+func RecordIntegrationError(ctx context.Context, target string, statusCode int, errorType string) {
+	counter, _ := Meter().Int64Counter(
+		serviceName+".integration.request.errors",
+		metric.WithDescription("Number of failed external integration API requests"),
+	)
+	counter.Add(ctx, 1,
+		metric.WithAttributes(
+			attribute.String(serviceName+".integration.target", target),
+			attribute.Int("http.response.status_code", statusCode),
+			attribute.String("error.type", errorType),
+		),
+	)
+}

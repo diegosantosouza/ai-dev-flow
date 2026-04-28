@@ -1,0 +1,65 @@
+// v0.1 — validate against a real Go service before using in production
+package otel
+
+import (
+	"context"
+	"time"
+
+	"go.opentelemetry.io/otel"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/codes"
+	"go.opentelemetry.io/otel/metric"
+)
+
+// RecordCronRun records the result of a cron job execution.
+// Call at the end of each cron run.
+//
+// Example usage:
+//
+//	func (c *MyCron) Run(ctx context.Context) error {
+//	    start := time.Now()
+//	    err := c.doWork(ctx)
+//	    otel.RecordCronRun(ctx, "my-cron", time.Since(start), err)
+//	    return err
+//	}
+func RecordCronRun(ctx context.Context, cronName string, duration time.Duration, err error) {
+	tracer := otel.Tracer(cronName)
+	_, span := tracer.Start(ctx, "cron "+cronName)
+	defer span.End()
+
+	outcome := "success"
+	errorType := ""
+	if err != nil {
+		outcome = "failure"
+		errorType = err.Error()
+		span.RecordError(err)
+		span.SetStatus(codes.Error, err.Error())
+	} else {
+		span.SetStatus(codes.Ok, "")
+	}
+
+	span.SetAttributes(
+		attribute.String(serviceName+".cron.name", cronName),
+		attribute.String("outcome", outcome),
+	)
+
+	counter, _ := Meter().Int64Counter(
+		serviceName+".cron.run",
+		metric.WithDescription("Number of cron job runs"),
+	)
+	attrs := []attribute.KeyValue{
+		attribute.String(serviceName+".cron.name", cronName),
+		attribute.String("outcome", outcome),
+	}
+	if errorType != "" {
+		attrs = append(attrs, attribute.String("error.type", errorType))
+	}
+	counter.Add(ctx, 1, metric.WithAttributes(attrs...))
+
+	histogram, _ := Meter().Float64Histogram(
+		serviceName+".cron.run.duration",
+		metric.WithDescription("Duration of cron job runs"),
+		metric.WithUnit("ms"),
+	)
+	histogram.Record(ctx, float64(duration.Milliseconds()), metric.WithAttributes(attrs...))
+}

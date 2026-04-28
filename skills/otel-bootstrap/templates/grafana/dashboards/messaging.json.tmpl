@@ -1,0 +1,199 @@
+{
+  "title": "{{SERVICE_PASCAL}} — Messaging (Pub/Sub)",
+  "uid": null,
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "tags": ["{{SERVICE_NAME}}", "pubsub", "messaging"],
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "label": "Datasource",
+        "hide": 0,
+        "refresh": 1,
+        "current": {}
+      },
+      {
+        "name": "subscription",
+        "type": "query",
+        "datasource": { "type": "prometheus", "uid": "${datasource}" },
+        "query": "label_values({{SERVICE_NAME}}_messaging_consumed_messages_total, messaging_destination_name)",
+        "label": "Subscription",
+        "includeAll": true,
+        "allValue": ".+",
+        "multi": false,
+        "refresh": 2,
+        "sort": 1,
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Ack Rate (5m)",
+      "description": "Percentual de mensagens processadas com sucesso (ack) nos últimos 5 min",
+      "gridPos": { "x": 0, "y": 0, "w": 8, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "yellow", "value": 0.9 },
+              { "color": "green", "value": 0.99 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"ack\",messaging_destination_name=~\"$subscription\"}[5m])) / sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{messaging_destination_name=~\"$subscription\"}[5m]))",
+          "legendFormat": "Ack rate",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Mensagens Processadas/s",
+      "description": "Taxa total de mensagens consumidas (todos outcomes) por segundo",
+      "gridPos": { "x": 8, "y": 0, "w": 8, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{messaging_destination_name=~\"$subscription\"}[5m]))",
+          "legendFormat": "Msgs/s",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Nacks/s",
+      "description": "Taxa de mensagens com falha no processamento (nack)",
+      "gridPos": { "x": 16, "y": 0, "w": 8, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.01 },
+              { "color": "red", "value": 0.1 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"nack\",messaging_destination_name=~\"$subscription\"}[5m]))",
+          "legendFormat": "Nacks/s",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "timeseries",
+      "title": "Mensagens/s por Subscription e Outcome",
+      "description": "Taxa de mensagens por subscription. Label messaging.destination.name → messaging_destination_name no Prometheus.",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        },
+        "overrides": [
+          { "matcher": { "id": "byRegexp", "options": ".*nack.*" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "red" } }] },
+          { "matcher": { "id": "byRegexp", "options": ".*ack.*" }, "properties": [{ "id": "color", "value": { "mode": "fixed", "fixedColor": "green" } }] }
+        ]
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum by (messaging_destination_name, outcome)(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{messaging_destination_name=~\"$subscription\"}[5m]))",
+          "legendFormat": "{{ messaging_destination_name }} / {{ outcome }}"
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "p95 Tempo de Processamento por Subscription (ms)",
+      "description": "Latência de processamento (do pull ao ack/nack). Histograma unit=ms → {{SERVICE_NAME}}_process_duration_milliseconds_bucket.",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": { "lineWidth": 2, "fillOpacity": 5 }
+        }
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "histogram_quantile(0.95, sum by (le, messaging_destination_name)(rate({{SERVICE_NAME}}_messaging_process_duration_milliseconds_bucket{messaging_destination_name=~\"$subscription\"}[5m])))",
+          "legendFormat": "p95 {{ messaging_destination_name }}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "table",
+      "title": "Throughput por Consumer Class (última hora)",
+      "description": "Total de mensagens por consumer ({{SERVICE_NAME}}_consumer = classe do código) e outcome",
+      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 7 },
+      "fieldConfig": {
+        "defaults": { "custom": { "displayMode": "auto" } }
+      },
+      "options": { "sortBy": [{ "displayName": "Value", "desc": true }] },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum by ({{SERVICE_NAME}}_consumer, outcome)(increase({{SERVICE_NAME}}_messaging_consumed_messages_total{messaging_destination_name=~\"$subscription\"}[1h]))",
+          "legendFormat": "{{ {{SERVICE_NAME}}_consumer }} / {{ outcome }}",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        { "id": "organize", "options": { "renameByName": { "{{SERVICE_NAME}}_consumer": "Consumer", "outcome": "Outcome", "Value": "Mensagens (1h)" } } }
+      ]
+    }
+  ]
+}

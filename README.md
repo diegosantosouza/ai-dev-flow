@@ -85,6 +85,16 @@ Model selection is intentional, not arbitrary:
 | `/review` | Delegates to `code-reviewer` — review recent changes |
 | `/commit` | Delegates to `committer` — create a conventional commit |
 
+## Skills
+
+Skills are reusable playbooks installed globally at `~/.claude/skills/`. Unlike commands, skills carry their own templates, scripts, and reference files — not just instructions.
+
+| Skill | What it does |
+|-------|-------------|
+| `/otel-bootstrap <service-name>` | Bootstraps OpenTelemetry observability (tracer, metrics, Grafana dashboards, alert rules) into a Node.js or Go microservice. Auto-detects HTTP, PubSub, and cron components. |
+
+See [`skills/otel-bootstrap/README.md`](skills/otel-bootstrap/README.md) for full usage and generated file list.
+
 ## Installation
 
 ```bash
@@ -170,12 +180,17 @@ User: /commit
 │   ├── debugger.md            # Bug diagnostician
 │   ├── doc-writer.md          # Documentation writer
 │   └── committer.md           # Git commit handler
-└── commands/
-    ├── research.md            # /research
-    ├── plan.md                # /plan
-    ├── implement.md           # /implement
-    ├── review.md              # /review
-    └── commit.md              # /commit
+├── commands/
+│   ├── research.md            # /research
+│   ├── plan.md                # /plan
+│   ├── implement.md           # /implement
+│   ├── review.md              # /review
+│   └── commit.md              # /commit
+└── skills/
+    └── otel-bootstrap/        # /otel-bootstrap <service-name>
+        ├── SKILL.md
+        ├── templates/         # node/, go/, grafana/
+        └── scripts/           # render.sh, detect.sh, validate.sh
 ```
 
 Each agent is a Markdown file with YAML frontmatter that defines its model, tools, permissions, and system prompt. Commands are thin wrappers that delegate to the right agent.

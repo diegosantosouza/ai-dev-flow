@@ -1,0 +1,26 @@
+import {
+  type Counter,
+  type Histogram,
+  metrics,
+  type ObservableCounter,
+  type ObservableGauge,
+  type ObservableUpDownCounter,
+  type UpDownCounter,
+} from '@opentelemetry/api';
+
+export interface Labels {
+  [key: string]: string | number | boolean;
+}
+
+export abstract class BaseMetrics {
+  protected readonly meter = metrics.getMeter(
+    process.env.OTEL_SERVICE_NAME ?? process.env.npm_package_name ?? '{{SERVICE_NAME}}'
+  );
+
+  protected counter?: Counter;
+  protected upDownCounter?: UpDownCounter;
+  protected histogram?: Histogram;
+  protected gauge?: ObservableGauge;
+  protected observableCounter?: ObservableCounter;
+  protected observableUpDownCounter?: ObservableUpDownCounter;
+}

@@ -45,6 +45,30 @@ for f in "$REPO_DIR"/commands/*.md; do
 done
 
 echo ""
+echo "skills:"
+for d in "$REPO_DIR"/skills/*/; do
+  [ -d "$d" ] || continue
+  name="$(basename "$d")"
+  src="${d%/}"
+  dst="$CLAUDE_DIR/skills/$name"
+  if [ -L "$dst" ]; then
+    current="$(readlink "$dst")"
+    if [ "$current" = "$src" ]; then
+      rm "$dst"
+      echo "  removed $name"
+      if [ -d "${dst}.bak" ]; then
+        mv "${dst}.bak" "$dst"
+        echo "  restored $name from backup"
+      fi
+    else
+      echo "  skip   $name (not managed by ai-dev-flow)"
+    fi
+  else
+    echo "  skip   $name (not a symlink)"
+  fi
+done
+
+echo ""
 echo "CLAUDE.md:"
 unlink_file "$REPO_DIR/.CLAUDE.md.rendered" "$CLAUDE_DIR/CLAUDE.md"
 

@@ -1,0 +1,318 @@
+{
+  "title": "{{SERVICE_PASCAL}} — Service Health",
+  "uid": null,
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "tags": ["{{SERVICE_NAME}}", "on-call"],
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "label": "Datasource",
+        "hide": 0,
+        "refresh": 1,
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Sync Error Rate (5m)",
+      "description": "Percentual de syncs com outcome=failure nos últimos 5 min. Label {{SERVICE_NAME}}.marketplace → {{SERVICE_NAME}}_marketplace no Prometheus.",
+      "gridPos": { "x": 0, "y": 0, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 20 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "100 * sum(rate({{SERVICE_NAME}}_sync_runs_total{outcome=\"failure\"}[5m])) / sum(rate({{SERVICE_NAME}}_sync_runs_total[5m]))",
+          "legendFormat": "Error rate",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Syncs/s",
+      "description": "Taxa total de sincronizações por segundo (todos outcomes)",
+      "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(rate({{SERVICE_NAME}}_sync_runs_total[5m]))",
+          "legendFormat": "Syncs/s",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Mensagens Pub/Sub/s",
+      "description": "Taxa de mensagens Pub/Sub processadas por segundo (todos outcomes)",
+      "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total[5m]))",
+          "legendFormat": "Msgs/s",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "Erros Integração/s",
+      "description": "Taxa de erros em chamadas externas (Innovaro, VMPay) por segundo",
+      "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.1 },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(rate({{SERVICE_NAME}}_integration_request_errors_total[5m]))",
+          "legendFormat": "Erros/s",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "type": "timeseries",
+      "title": "p95 Duração de Sync por Marketplace (ms)",
+      "description": "Percentil 95 da duração de sync discriminado por {{SERVICE_NAME}}_marketplace",
+      "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        }
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "histogram_quantile(0.95, sum by (le, {{SERVICE_NAME}}_marketplace)(rate({{SERVICE_NAME}}_sync_run_duration_milliseconds_bucket[5m])))",
+          "legendFormat": "p95 {{ {{SERVICE_NAME}}_marketplace }}"
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "timeseries",
+      "title": "Nack Rate por Subscription (msgs/s)",
+      "description": "Mensagens Pub/Sub que resultaram em nack (falha no processamento)",
+      "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        }
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum by (messaging_destination_name)(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"nack\"}[5m]))",
+          "legendFormat": "{{ messaging_destination_name }}"
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "table",
+      "title": "Crons — Execuções nas últimas 24h",
+      "description": "Total de execuções por cron e outcome. Cron ausente na tabela = heartbeat missing.",
+      "gridPos": { "x": 0, "y": 12, "w": 24, "h": 7 },
+      "fieldConfig": {
+        "defaults": { "custom": { "displayMode": "auto" } }
+      },
+      "options": { "sortBy": [{ "displayName": "{{SERVICE_NAME}}_cron_name" }] },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum by ({{SERVICE_NAME}}_cron_name, outcome)(increase({{SERVICE_NAME}}_cron_run_total[24h]))",
+          "legendFormat": "{{ {{SERVICE_NAME}}_cron_name }} / {{ outcome }}",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        { "id": "organize", "options": { "renameByName": { "{{SERVICE_NAME}}_cron_name": "Cron", "outcome": "Outcome", "Value": "Execuções (24h)" } } }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "row",
+      "title": "HTTP API (RED)",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 19, "w": 24, "h": 1 }
+    },
+    {
+      "id": 9,
+      "type": "stat",
+      "title": "HTTP Requests/s",
+      "description": "Taxa total de requisições HTTP recebidas pela API REST do {{SERVICE_NAME}}",
+      "gridPos": { "x": 0, "y": 20, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[5m]))",
+          "legendFormat": "Requests/s",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "HTTP 5xx Error Rate (%)",
+      "description": "Percentual de respostas 5xx sobre o total de requisições HTTP nos últimos 5 min",
+      "gridPos": { "x": 6, "y": 20, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "100 * sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\",http_status_code=~\"5..\"}[5m])) / sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[5m]))",
+          "legendFormat": "5xx %",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "p95 Latência HTTP por Rota (ms)",
+      "description": "Percentil 95 da duração das requisições HTTP agrupado por rota Express reconhecida",
+      "gridPos": { "x": 0, "y": 24, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": { "lineWidth": 2, "fillOpacity": 10 }
+        }
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "histogram_quantile(0.95, sum by (le, http_route)(rate(http_server_duration_milliseconds_bucket{exported_job=\"{{EXPORTED_JOB}}\"}[5m])))",
+          "legendFormat": "p95 {{ http_route }}"
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "table",
+      "title": "Top 5 Rotas por p99 (ms)",
+      "description": "As 5 rotas mais lentas medidas por percentil 99 nos últimos 5 min",
+      "gridPos": { "x": 12, "y": 24, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": { "unit": "ms", "custom": { "displayMode": "color-background-solid" } }
+      },
+      "options": { "sortBy": [{ "displayName": "Value", "desc": true }] },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "topk(5, histogram_quantile(0.99, sum by (le, http_route)(rate(http_server_duration_milliseconds_bucket{exported_job=\"{{EXPORTED_JOB}}\"}[5m]))))",
+          "legendFormat": "{{ http_route }}",
+          "instant": true,
+          "format": "table"
+        }
+      ],
+      "transformations": [
+        { "id": "organize", "options": { "renameByName": { "http_route": "Rota", "Value": "p99 (ms)" } } }
+      ]
+    }
+  ]
+}

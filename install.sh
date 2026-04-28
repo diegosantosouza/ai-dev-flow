@@ -24,7 +24,7 @@ check_dependency jq "brew install jq"
 
 # --- directories ---
 
-mkdir -p "$CLAUDE_DIR/agents" "$CLAUDE_DIR/commands"
+mkdir -p "$CLAUDE_DIR/agents" "$CLAUDE_DIR/commands" "$CLAUDE_DIR/skills"
 
 # --- helpers ---
 
@@ -75,6 +75,34 @@ echo "commands:"
 for f in "$REPO_DIR"/commands/*.md; do
   [ -f "$f" ] || continue
   link_file "$f" "$CLAUDE_DIR/commands/$(basename "$f")"
+done
+
+# --- symlink skills (whole directory per skill) ---
+
+echo ""
+echo "skills:"
+for d in "$REPO_DIR"/skills/*/; do
+  [ -d "$d" ] || continue
+  name="$(basename "$d")"
+  src="${d%/}"
+  dst="$CLAUDE_DIR/skills/$name"
+  if [ -L "$dst" ]; then
+    current="$(readlink "$dst")"
+    if [ "$current" = "$src" ]; then
+      echo "  skip  $name (already linked)"
+    else
+      echo "  update $name (relink)"
+      rm "$dst"
+      ln -s "$src" "$dst"
+    fi
+  elif [ -d "$dst" ]; then
+    echo "  backup $name -> ${dst}.bak"
+    mv "$dst" "${dst}.bak"
+    ln -s "$src" "$dst"
+  else
+    echo "  link  $name"
+    ln -s "$src" "$dst"
+  fi
 done
 
 # --- CLAUDE.md ---
@@ -150,6 +178,18 @@ fi
 if ! bash "$REPO_DIR/scripts/validate-agents.sh" "$REPO_DIR/agents"; then
   ERRORS=$((ERRORS + 1))
 fi
+
+# check skill symlinks
+for d in "$REPO_DIR"/skills/*/; do
+  [ -d "$d" ] || continue
+  name="$(basename "$d")"
+  src="${d%/}"
+  dst="$CLAUDE_DIR/skills/$name"
+  if [ ! -L "$dst" ] || [ "$(readlink "$dst")" != "$src" ]; then
+    echo "  FAIL  skills/$name symlink broken"
+    ERRORS=$((ERRORS + 1))
+  fi
+done
 
 # install pre-commit hook
 echo ""

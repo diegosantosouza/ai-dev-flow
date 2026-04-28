@@ -1,0 +1,162 @@
+import type { Message } from '@google-cloud/pubsub';
+import {
+  context,
+  propagation,
+  SpanKind,
+  SpanStatusCode,
+  trace,
+} from '@opentelemetry/api';
+import { {{SERVICE_UPPER}}_ATTR, MESSAGING_ATTR } from '@/shared/tracer/attributes';
+import { PubSubMetrics } from '@/shared/tracer/metrics/pubsub-metrics';
+import { spanNames } from '@/shared/tracer/instrument-names';
+import { getPubSubClient } from '@/shared/pubsub/gcp-pubsub';
+import Log from '@/shared/logger/log';
+
+export interface PubSubMessage {
+  data: Buffer;
+  attributes: Record<string, string>;
+}
+
+export abstract class BaseConsumer {
+  private static mongoConnected = false;
+  protected static consumerName: string;
+  protected static maxMessages: number = 10;
+
+  protected static onMessage(
+    _payload: unknown,
+    _messageId: string,
+    _attributes: Record<string, string>
+  ): Promise<void> {
+    throw new Error('onMessage must be implemented by subclass');
+  }
+
+  private static createConsumer(
+    subscriptionName: string,
+    ConsumerClass: typeof BaseConsumer
+  ): void {
+    try {
+      Log.info(`Initializing ${ConsumerClass.consumerName}`, {
+        event: `[${ConsumerClass.consumerName}:initialization:start]`,
+      });
+
+      const pubsub = getPubSubClient();
+
+      if (!subscriptionName) {
+        throw new Error(`Subscription name is required for ${ConsumerClass.consumerName}`);
+      }
+
+      const subscription = pubsub.subscription(subscriptionName, {
+        flowControl: {
+          maxMessages: ConsumerClass.maxMessages,
+          allowExcessMessages: false,
+        },
+      });
+
+      subscription.on('message', async (message: Message) => {
+        const startTime = Date.now();
+        const messageId = message.id;
+
+        const extractedCtx = propagation.extract(context.active(), message.attributes);
+        const span = trace.getTracer(ConsumerClass.consumerName).startSpan(
+          spanNames.consumer(subscriptionName),
+          { kind: SpanKind.CONSUMER },
+          extractedCtx
+        );
+
+        span.setAttributes({
+          [MESSAGING_ATTR.SYSTEM]: 'gcp_pubsub',
+          [MESSAGING_ATTR.OPERATION_TYPE]: 'process',
+          [MESSAGING_ATTR.DESTINATION_NAME]: subscriptionName,
+          [MESSAGING_ATTR.MESSAGE_ID]: messageId,
+          [{{SERVICE_UPPER}}_ATTR.CONSUMER]: ConsumerClass.consumerName,
+          ...(message.attributes.correlationId && {
+            [{{SERVICE_UPPER}}_ATTR.CORRELATION_ID]: message.attributes.correlationId,
+          }),
+        });
+
+        try {
+          await context.with(trace.setSpan(extractedCtx, span), async () => {
+            Log.debug('Starting PubSub message processing', {
+              event: `[${ConsumerClass.consumerName}:pubsub:start]`,
+              messageId,
+            });
+
+            const payload = JSON.parse(message.data.toString());
+            const attributes = { ...message.attributes, messageId };
+
+            await (ConsumerClass as typeof BaseConsumer).onMessage(payload, messageId, attributes);
+            message.ack();
+          });
+
+          const processingTime = Date.now() - startTime;
+          span.setStatus({ code: SpanStatusCode.OK });
+          Log.info('PubSub message processed successfully', {
+            event: `[${ConsumerClass.consumerName}:pubsub:success]`,
+            messageId,
+            processingTimeMs: processingTime,
+          });
+          PubSubMetrics.instance.recordConsumed({
+            subscription: subscriptionName,
+            consumer: ConsumerClass.consumerName,
+            outcome: 'ack',
+            durationMs: processingTime,
+          });
+        } catch (error) {
+          const processingTime = Date.now() - startTime;
+          const errorType =
+            (error as any)?.code ?? (error instanceof Error ? error.name : 'UnknownError');
+
+          span.recordException(error as Error);
+          span.setStatus({ code: SpanStatusCode.ERROR });
+          span.setAttribute({{SERVICE_UPPER}}_ATTR.ERROR_TYPE, errorType);
+
+          Log.error('Error processing PubSub message', {
+            event: `[${ConsumerClass.consumerName}:pubsub:error]`,
+            messageId,
+            processingTimeMs: processingTime,
+            errorMessage: error instanceof Error ? error.message : 'Unknown error',
+            errorName: error instanceof Error ? error.name : undefined,
+          });
+
+          PubSubMetrics.instance.recordConsumed({
+            subscription: subscriptionName,
+            consumer: ConsumerClass.consumerName,
+            outcome: 'nack',
+            durationMs: processingTime,
+            errorType,
+          });
+
+          message.nack();
+        } finally {
+          span.end();
+        }
+      });
+
+      subscription.on('error', (error: Error) => {
+        Log.error('PubSub subscription error', {
+          event: `[${ConsumerClass.consumerName}:pubsub:subscription_error]`,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        });
+      });
+
+      Log.info(`${ConsumerClass.consumerName} PubSub consumer initialized`, {
+        event: `[${ConsumerClass.consumerName}:initialization:success]`,
+        subscriptionName,
+      });
+    } catch (error) {
+      Log.error(`Error initializing ${ConsumerClass.consumerName}`, {
+        event: `[${ConsumerClass.consumerName}:initialization:error]`,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+      });
+      throw error;
+    }
+  }
+
+  public static makeConsumer(envVarName: string, consumerConfigName: string): void {
+    const subscriptionName = process.env[envVarName] || '';
+    if (!subscriptionName) {
+      throw new Error(`${envVarName} environment variable is required`);
+    }
+    BaseConsumer.createConsumer(subscriptionName, this as typeof BaseConsumer);
+  }
+}

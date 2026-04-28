@@ -1,0 +1,64 @@
+import { type Counter, type Histogram } from '@opentelemetry/api';
+import { {{SERVICE_UPPER}}_ATTR } from '@/shared/tracer/attributes';
+import { METRIC_NAMES } from '@/shared/tracer/instrument-names';
+import { BaseMetrics, type Labels } from './base-metrics';
+
+interface RecordRunParams {
+  cron: string;
+  outcome: 'success' | 'failure';
+  durationMs: number;
+  errorType?: string;
+}
+
+interface RecordItemParams {
+  cron: string;
+  resourceType: string;
+  outcome: 'success' | 'failure' | 'skipped';
+}
+
+export class CronMetrics extends BaseMetrics {
+  private static _instance: CronMetrics;
+
+  protected counter: Counter;
+  protected histogram: Histogram;
+  private itemsCounter: Counter;
+
+  private constructor() {
+    super();
+    this.counter = this.meter.createCounter(METRIC_NAMES.CRON_RUN, {
+      description: 'Number of cron job runs',
+    });
+    this.histogram = this.meter.createHistogram(METRIC_NAMES.CRON_RUN_DURATION, {
+      description: 'Duration of cron job runs',
+      unit: 'ms',
+    });
+    this.itemsCounter = this.meter.createCounter(METRIC_NAMES.CRON_ITEMS_PROCESSED, {
+      description: 'Number of items processed by cron jobs',
+    });
+  }
+
+  static get instance(): CronMetrics {
+    if (!CronMetrics._instance) {
+      CronMetrics._instance = new CronMetrics();
+    }
+    return CronMetrics._instance;
+  }
+
+  recordRun({ cron, outcome, durationMs, errorType }: RecordRunParams): void {
+    const labels: Labels = {
+      [{{SERVICE_UPPER}}_ATTR.CRON_NAME]: cron,
+      outcome,
+      ...(errorType && { [{{SERVICE_UPPER}}_ATTR.ERROR_TYPE]: errorType }),
+    };
+    this.counter.add(1, labels);
+    this.histogram.record(durationMs, labels);
+  }
+
+  recordItem({ cron, resourceType, outcome }: RecordItemParams): void {
+    this.itemsCounter.add(1, {
+      [{{SERVICE_UPPER}}_ATTR.CRON_NAME]: cron,
+      [{{SERVICE_UPPER}}_ATTR.RESOURCE_TYPE]: resourceType,
+      outcome,
+    });
+  }
+}

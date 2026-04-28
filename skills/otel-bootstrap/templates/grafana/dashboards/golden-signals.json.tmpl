@@ -1,0 +1,595 @@
+{
+  "title": "{{SERVICE_PASCAL}} — Golden Signals",
+  "uid": null,
+  "schemaVersion": 39,
+  "version": 1,
+  "refresh": "30s",
+  "time": { "from": "now-1h", "to": "now" },
+  "timezone": "browser",
+  "tags": ["{{SERVICE_NAME}}", "golden-signals", "on-call"],
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "type": "datasource",
+        "query": "prometheus",
+        "label": "Datasource",
+        "hide": 0,
+        "refresh": 1,
+        "current": {}
+      }
+    ]
+  },
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Latency",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 0, "w": 24, "h": 1 }
+    },
+    {
+      "id": 2,
+      "type": "timeseries",
+      "title": "HTTP — p50 / p95 / p99 (ms)",
+      "description": "Percentis de latência da API REST do {{SERVICE_NAME}}. Alerta se p99 > 2000ms de forma sustentada.",
+      "gridPos": { "x": 0, "y": 1, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": { "lineWidth": 2, "fillOpacity": 8 }
+        }
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "histogram_quantile(0.50, sum by (le)(rate(http_server_duration_milliseconds_bucket{exported_job=\"{{EXPORTED_JOB}}\"}[5m])))",
+          "legendFormat": "p50"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "histogram_quantile(0.95, sum by (le)(rate(http_server_duration_milliseconds_bucket{exported_job=\"{{EXPORTED_JOB}}\"}[5m])))",
+          "legendFormat": "p95"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "histogram_quantile(0.99, sum by (le)(rate(http_server_duration_milliseconds_bucket{exported_job=\"{{EXPORTED_JOB}}\"}[5m])))",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "timeseries",
+      "title": "{{SERVICE_PASCAL}} Operations — p95 (ms)",
+      "description": "Latência p95 das operações internas: sync por marketplace, processamento de mensagens PubSub e execuções de cron",
+      "gridPos": { "x": 12, "y": 1, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": { "lineWidth": 2, "fillOpacity": 8 }
+        }
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "histogram_quantile(0.95, sum by (le, {{SERVICE_NAME}}_marketplace)(rate({{SERVICE_NAME}}_sync_run_duration_milliseconds_bucket[5m])))",
+          "legendFormat": "sync {{ {{SERVICE_NAME}}_marketplace }}"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "histogram_quantile(0.95, sum by (le)(rate({{SERVICE_NAME}}_messaging_process_duration_milliseconds_bucket[5m])))",
+          "legendFormat": "pubsub"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "histogram_quantile(0.95, sum by (le)(rate({{SERVICE_NAME}}_cron_run_duration_milliseconds_bucket[5m])))",
+          "legendFormat": "cron"
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "type": "row",
+      "title": "Traffic",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 9, "w": 24, "h": 1 }
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "HTTP Requests/s",
+      "description": "Taxa total de requisições recebidas pela API REST",
+      "gridPos": { "x": 0, "y": 10, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[5m]))",
+          "legendFormat": "req/s",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "type": "stat",
+      "title": "Syncs/s",
+      "description": "Taxa de sincronizações de recursos (produtos, sellers, PDVs)",
+      "gridPos": { "x": 6, "y": 10, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(rate({{SERVICE_NAME}}_sync_runs_total[5m]))",
+          "legendFormat": "syncs/s",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "PubSub Msgs/s",
+      "description": "Taxa de mensagens Pub/Sub processadas pelos consumers",
+      "gridPos": { "x": 12, "y": 10, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total[5m]))",
+          "legendFormat": "msgs/s",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "Order Splits/s",
+      "description": "Taxa de order splits criados e sincronizados",
+      "gridPos": { "x": 18, "y": 10, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "blue", "value": null }] }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(rate({{SERVICE_NAME}}_order_split_created_total[5m]))",
+          "legendFormat": "splits/s",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 9,
+      "type": "timeseries",
+      "title": "HTTP Requests/s por Rota",
+      "description": "Volume de requisições por rota Express nos últimos 5 min",
+      "gridPos": { "x": 0, "y": 14, "w": 24, "h": 7 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "custom": { "lineWidth": 2, "fillOpacity": 8 }
+        }
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "right" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum by (http_route)(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[5m]))",
+          "legendFormat": "{{ http_route }}"
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "row",
+      "title": "Errors",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 21, "w": 24, "h": 1 }
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "HTTP 5xx Error Rate (%)",
+      "description": "Percentual de respostas 5xx sobre o total nos últimos 5 min",
+      "gridPos": { "x": 0, "y": 22, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 1 },
+              { "color": "red", "value": 5 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "100 * sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\",http_status_code=~\"5..\"}[5m])) / sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[5m]))",
+          "legendFormat": "5xx %",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "stat",
+      "title": "Sync Failure Rate (%)",
+      "description": "Percentual de syncs com outcome=failure nos últimos 5 min",
+      "gridPos": { "x": 6, "y": 22, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 20 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "100 * sum(rate({{SERVICE_NAME}}_sync_runs_total{outcome=\"failure\"}[5m])) / sum(rate({{SERVICE_NAME}}_sync_runs_total[5m]))",
+          "legendFormat": "Sync failure %",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 13,
+      "type": "stat",
+      "title": "PubSub Nack Rate (%)",
+      "description": "Percentual de mensagens PubSub com outcome=nack (falha no processamento)",
+      "gridPos": { "x": 12, "y": 22, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 5 },
+              { "color": "red", "value": 10 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "100 * sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"nack\"}[5m])) / sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total[5m]))",
+          "legendFormat": "Nack %",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 14,
+      "type": "stat",
+      "title": "Integration Errors/s",
+      "description": "Taxa de erros em chamadas a APIs externas (Innovaro, VMPay)",
+      "gridPos": { "x": 18, "y": 22, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "reqps",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.1 },
+              { "color": "red", "value": 1 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum(rate({{SERVICE_NAME}}_integration_request_errors_total[5m]))",
+          "legendFormat": "errors/s",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "Error Rates (%) — Série Temporal",
+      "description": "Evolução das taxas de erro ao longo do tempo (HTTP 5xx, sync failures, PubSub nacks)",
+      "gridPos": { "x": 0, "y": 26, "w": 24, "h": 7 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": { "lineWidth": 2, "fillOpacity": 8 },
+          "min": 0
+        }
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "100 * sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\",http_status_code=~\"5..\"}[5m])) / sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[5m]))",
+          "legendFormat": "HTTP 5xx %"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "100 * sum(rate({{SERVICE_NAME}}_sync_runs_total{outcome=\"failure\"}[5m])) / sum(rate({{SERVICE_NAME}}_sync_runs_total[5m]))",
+          "legendFormat": "Sync failure %"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "100 * sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"nack\"}[5m])) / sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total[5m]))",
+          "legendFormat": "PubSub nack %"
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "type": "row",
+      "title": "Saturation (Node.js Runtime)",
+      "collapsed": false,
+      "gridPos": { "x": 0, "y": 33, "w": 24, "h": 1 }
+    },
+    {
+      "id": 17,
+      "type": "stat",
+      "title": "Event Loop Delay p99 (ms)",
+      "description": "Percentil 99 do atraso do event loop. Acima de 100ms indica saturação de CPU ou I/O bloqueante.",
+      "gridPos": { "x": 0, "y": 34, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 100 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "nodejs_eventloop_delay_p99_seconds{exported_job=\"{{EXPORTED_JOB}}\"} * 1000",
+          "legendFormat": "EL delay p99",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "type": "stat",
+      "title": "Event Loop Utilization",
+      "description": "Fração do tempo em que o event loop está ativo (0=ocioso, 1=totalmente ocupado). Acima de 0.8 é sinal de alerta.",
+      "gridPos": { "x": 6, "y": 34, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.6 },
+              { "color": "red", "value": 0.8 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "nodejs_eventloop_utilization_ratio{exported_job=\"{{EXPORTED_JOB}}\"}",
+          "legendFormat": "ELU",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 19,
+      "type": "stat",
+      "title": "Heap Used / Heap Limit (%)",
+      "description": "Percentual de uso do heap V8. Acima de 80% indica pressão de memória. Requer v8js_memory_heap_* disponível no Prometheus.",
+      "gridPos": { "x": 12, "y": 34, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 0.7 },
+              { "color": "red", "value": 0.85 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum without (v8js_heap_space_name)(v8js_memory_heap_used_bytes{exported_job=\"{{EXPORTED_JOB}}\"}) / sum without (v8js_heap_space_name)(v8js_memory_heap_limit_bytes{exported_job=\"{{EXPORTED_JOB}}\"})",
+          "legendFormat": "heap %",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 20,
+      "type": "stat",
+      "title": "GC Pause p99 (ms)",
+      "description": "Percentil 99 da duração das pausas de Garbage Collection. Requer v8js_gc_duration_* disponível no Prometheus.",
+      "gridPos": { "x": 18, "y": 34, "w": 6, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "none"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 50 },
+              { "color": "red", "value": 200 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "histogram_quantile(0.99, sum by (le)(rate(v8js_gc_duration_seconds_bucket{exported_job=\"{{EXPORTED_JOB}}\"}[5m]))) * 1000",
+          "legendFormat": "GC p99",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 21,
+      "type": "timeseries",
+      "title": "Event Loop Delay — p50 / p90 / p99 (ms)",
+      "description": "Série temporal do atraso do event loop. Picos sustentados indicam CPU bound ou código bloqueante.",
+      "gridPos": { "x": 0, "y": 38, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "ms",
+          "custom": { "lineWidth": 2, "fillOpacity": 8 },
+          "min": 0
+        }
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "nodejs_eventloop_delay_p50_seconds{exported_job=\"{{EXPORTED_JOB}}\"} * 1000",
+          "legendFormat": "p50"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "nodejs_eventloop_delay_p90_seconds{exported_job=\"{{EXPORTED_JOB}}\"} * 1000",
+          "legendFormat": "p90"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "nodejs_eventloop_delay_p99_seconds{exported_job=\"{{EXPORTED_JOB}}\"} * 1000",
+          "legendFormat": "p99"
+        }
+      ]
+    },
+    {
+      "id": 22,
+      "type": "timeseries",
+      "title": "Event Loop Utilization (ELU)",
+      "description": "Evolução da utilização do event loop ao longo do tempo. Baseline saudável: abaixo de 0.5.",
+      "gridPos": { "x": 12, "y": 38, "w": 12, "h": 8 },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": { "lineWidth": 2, "fillOpacity": 8 }
+        }
+      },
+      "options": { "legend": { "displayMode": "list", "placement": "bottom" } },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "nodejs_eventloop_utilization_ratio{exported_job=\"{{EXPORTED_JOB}}\"}",
+          "legendFormat": "ELU"
+        }
+      ]
+    }
+  ]
+}
