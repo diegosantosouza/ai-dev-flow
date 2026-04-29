@@ -96,10 +96,17 @@ If `src/consumers/base.consumer.ts` already exists: use Edit to **add** the OTel
 
 ### Node.js — conditional on `has_cron`
 
+Detect cron directory layout before writing:
+- If `src/modules/crons/` exists → use `src/modules/crons/base.cron.ts`
+- Else if `src/crons/` exists → use `src/crons/base.cron.ts`
+- Else → create `src/modules/crons/base.cron.ts` (default for NestJS services)
+
+Also set `has_cron = true` if `src/modules/crons/` exists, regardless of `package.json`.
+
 | Template | Target path |
 |---|---|
 | `metrics/cron-metrics.ts.tmpl` | `src/shared/tracer/metrics/cron-metrics.ts` |
-| `base-classes/base.cron.ts.tmpl` | `src/crons/base.cron.ts` |
+| `base-classes/base.cron.ts.tmpl` | `<detected-cron-dir>/base.cron.ts` |
 
 Same patch logic: if file exists, augment rather than overwrite.
 
@@ -130,6 +137,85 @@ Same patch logic: if file exists, augment rather than overwrite.
 | Template | Target path |
 |---|---|
 | `go/cron.go.tmpl` | `internal/otel/cron.go` |
+
+---
+
+## Step 3.5 — Audit existing components for metric wiring
+
+After writing the base-class files, scan the service for components that exist but don't extend them. These are invisible to the observability stack until patched.
+
+```bash
+# Consumers not extending BaseConsumer
+grep -rL "extends BaseConsumer" src/consumers/ 2>/dev/null | grep -v base.consumer | grep '\.ts$'
+
+# Crons using @Cron decorator but not extending BaseCron
+grep -rl "@Cron(" src/modules/crons/services/ 2>/dev/null | xargs grep -lL "extends BaseCron" 2>/dev/null
+grep -rl "@Cron(" src/crons/services/ 2>/dev/null | xargs grep -lL "extends BaseCron" 2>/dev/null
+
+# HTTP request service(s)
+find src -name "request.service.ts" -o -name "*-request.service.ts" 2>/dev/null
+```
+
+For each file found, **show the user the patch to apply** (do not apply automatically):
+
+**Consumer not extending BaseConsumer** — add inside the message handler:
+```ts
+const startTime = Date.now();
+// ... existing handler logic ...
+PubSubMetrics.instance.recordConsumed({
+  subscription: subscriptionName,
+  consumer: ThisClass.name,
+  outcome: 'ack' | 'nack',
+  durationMs: Date.now() - startTime,
+  errorType: optionalOnNack,  // only on nack
+});
+```
+
+**Cron not extending BaseCron** — refactor to:
+```ts
+@Injectable()
+export class MyCron extends BaseCron {
+  protected readonly logger = new Logger(MyCron.name);
+  protected readonly cronName = 'my-cron-name';
+  constructor(...) { super(); }
+
+  @Cron(CronExpression.EVERY_HOUR, { name: 'my-cron-name' })
+  async handleCron() {
+    await this.runWithTelemetry(() => this.execute()).catch((e) =>
+      this.logger.error(`Fatal error in MyCron`, e.stack),
+    );
+  }
+
+  private async execute() {
+    // original body, CronMetrics.instance.recordItem() per item processed
+  }
+}
+```
+
+**HTTP request service (generic HTTP client)** — extend the catch block:
+```ts
+} catch (e) {
+  if (e?.response) {
+    const statusCode = e.response.status as number;
+    if (statusCode >= 400) {
+      IntegrationMetrics.instance.recordError({ target: this.target, statusCode, errorType: `HTTP_${statusCode}` });
+    }
+    return new ResponseService<T>(e.response);
+  }
+  IntegrationMetrics.instance.recordError({
+    target: this.target,
+    errorType: (e as any)?.code ?? (e instanceof Error ? e.name : 'NetworkError'),
+  });
+  this.logger.error('Request error: ', e);
+  throw e;
+}
+```
+Add getter:
+```ts
+private get target(): string {
+  try { return new URL(this._baseUrl).hostname; } catch { return this._baseUrl ?? 'unknown'; }
+}
+```
 
 ---
 
@@ -190,6 +276,53 @@ grep -r "{{SERVICE" deploy/grafana/ internal/otel/ && echo "WARNING: unreplaced 
 
 ---
 
+## Step 7 — Kubernetes deployment configuration (Node only)
+
+Check `deploy/{{SERVICE_NAME}}.yml` (or `deploy/k8s/` equivalent). Recommend adding `NODE_OPTIONS` if not present:
+
+```yaml
+containers:
+  - name: {{SERVICE_NAME}}
+    env:
+    - name: NODE_OPTIONS
+      value: "--max-old-space-size-percentage=60"
+```
+
+**Why:** V8 auto-calculates `max_old_space_size` ≈ 25% of the container `memory.limits`. With a 400Mi limit the heap is capped at ~93MB, causing 85-95% heap utilization, constant GC pressure, and latency spikes. The `--max-old-space-size-percentage=60` flag is relative to the container limit (no hardcoded MB), so it adapts automatically if the limit changes. The 40% remainder covers off-heap memory (JIT code, native modules, buffers, thread stack).
+
+Also check:
+- `requests.cpu` should be close to actual measured CPU usage, not inflated. Inflated `requests.cpu` makes HPA fire too late (or never). Target: `requests.cpu ≈ actual_p95_cpu`, with HPA `targetCPUUtilizationPercentage: 75`.
+- `requests.memory ≈ baseline_rss + 30% margin`.
+
+---
+
+## Step 8 — Validate against Prometheus
+
+After deploying, verify metrics are actually arriving with the expected `exported_job` label:
+
+```bash
+# Replace <prometheus-url> with your local port-forward or internal URL
+curl -sG http://<prometheus-url>/api/v1/series \
+  --data-urlencode 'match[]={exported_job="{{EXPORTED_JOB}}"}' \
+  | jq -r '.data[].__name__' | sort -u
+```
+
+**Expected auto-instrumentation metrics:**
+- `http_server_duration_milliseconds_*` (if `has_http`)
+- `nodejs_eventloop_delay_*`, `nodejs_eventloop_utilization_ratio`
+- `v8js_memory_heap_*`
+
+**Expected custom metrics** (appear only after first event):
+- `{{SERVICE_NAME}}_messaging_consumed_messages_total` — after first message consumed
+- `{{SERVICE_NAME}}_cron_run_total` — after first cron execution
+- `{{SERVICE_NAME}}_integration_request_errors_total` — after first integration error
+
+If `exported_job` has an unexpected name:
+1. Check `OTEL_SERVICE_NAME` env var in the K8s deployment
+2. Check OTel Collector resource processors — they can override `service.name`
+
+---
+
 ## Acceptance criteria
 
 - [ ] All template placeholders replaced — no `{{SERVICE_NAME}}` etc. in generated files
@@ -199,3 +332,9 @@ grep -r "{{SERVICE" deploy/grafana/ internal/otel/ && echo "WARNING: unreplaced 
 - [ ] Node: metric names in `instrument-names.ts` use `{{SERVICE_NAME}}.` prefix
 - [ ] Go: all generated `.go` files have correct package declarations
 - [ ] No domain-specific code from the reference service in generated files (business metrics, proprietary integrations, internal decorators)
+- [ ] Heap MB panels (id=23 Heap Used, id=24 Heap Limit) present in golden-signals dashboard
+- [ ] All absolute rate panels use `* 60` and show `/min` in title/legend
+- [ ] HTTP client latency panels use `http_client_duration_milliseconds_bucket` (not `_request_duration_seconds_`)
+- [ ] Step 3.5 audit ran — existing consumers/crons/HTTP clients patched or confirmed already extending base classes
+- [ ] `NODE_OPTIONS=--max-old-space-size-percentage=60` added to K8s deployment (Step 7)
+- [ ] Prometheus validation from Step 8 returned at least `http_server_duration_milliseconds_*` and `v8js_memory_heap_*`

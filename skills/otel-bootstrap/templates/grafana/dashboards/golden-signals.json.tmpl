@@ -100,7 +100,7 @@
     {
       "id": 5,
       "type": "stat",
-      "title": "HTTP Requests/s",
+      "title": "HTTP Requests/min",
       "description": "Taxa total de requisições recebidas pela API REST",
       "gridPos": { "x": 0, "y": 10, "w": 6, "h": 4 },
       "options": {
@@ -117,8 +117,8 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[5m]))",
-          "legendFormat": "req/s",
+          "expr": "sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[5m])) * 60",
+          "legendFormat": "req/min",
           "instant": true
         }
       ]
@@ -126,7 +126,7 @@
     {
       "id": 6,
       "type": "stat",
-      "title": "Syncs/s",
+      "title": "Syncs/min",
       "description": "Taxa de sincronizações de recursos (produtos, sellers, PDVs)",
       "gridPos": { "x": 6, "y": 10, "w": 6, "h": 4 },
       "options": {
@@ -143,8 +143,8 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate({{SERVICE_NAME}}_sync_runs_total[5m]))",
-          "legendFormat": "syncs/s",
+          "expr": "sum(rate({{SERVICE_NAME}}_sync_runs_total[5m])) * 60",
+          "legendFormat": "syncs/min",
           "instant": true
         }
       ]
@@ -152,7 +152,7 @@
     {
       "id": 7,
       "type": "stat",
-      "title": "PubSub Msgs/s",
+      "title": "PubSub Msgs/min",
       "description": "Taxa de mensagens Pub/Sub processadas pelos consumers",
       "gridPos": { "x": 12, "y": 10, "w": 6, "h": 4 },
       "options": {
@@ -169,8 +169,8 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total[5m]))",
-          "legendFormat": "msgs/s",
+          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total[5m])) * 60",
+          "legendFormat": "msgs/min",
           "instant": true
         }
       ]
@@ -178,7 +178,7 @@
     {
       "id": 8,
       "type": "stat",
-      "title": "Order Splits/s",
+      "title": "Order Splits/min",
       "description": "Taxa de order splits criados e sincronizados",
       "gridPos": { "x": 18, "y": 10, "w": 6, "h": 4 },
       "options": {
@@ -195,8 +195,8 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate({{SERVICE_NAME}}_order_split_created_total[5m]))",
-          "legendFormat": "splits/s",
+          "expr": "sum(rate({{SERVICE_NAME}}_order_split_created_total[5m])) * 60",
+          "legendFormat": "splits/min",
           "instant": true
         }
       ]
@@ -204,7 +204,7 @@
     {
       "id": 9,
       "type": "timeseries",
-      "title": "HTTP Requests/s por Rota",
+      "title": "HTTP Requests/min por Rota",
       "description": "Volume de requisições por rota Express nos últimos 5 min",
       "gridPos": { "x": 0, "y": 14, "w": 24, "h": 7 },
       "fieldConfig": {
@@ -217,7 +217,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum by (http_route)(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[5m]))",
+          "expr": "sum by (http_route)(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[5m])) * 60",
           "legendFormat": "{{ http_route }}"
         }
       ]
@@ -331,7 +331,7 @@
     {
       "id": 14,
       "type": "stat",
-      "title": "Integration Errors/s",
+      "title": "Integration Errors/min",
       "description": "Taxa de erros em chamadas a APIs externas (Innovaro, VMPay)",
       "gridPos": { "x": 18, "y": 22, "w": 6, "h": 4 },
       "options": {
@@ -355,8 +355,8 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate({{SERVICE_NAME}}_integration_request_errors_total[5m]))",
-          "legendFormat": "errors/s",
+          "expr": "sum(rate({{SERVICE_NAME}}_integration_request_errors_total[5m])) * 60",
+          "legendFormat": "errors/min",
           "instant": true
         }
       ]
@@ -588,6 +588,72 @@
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "expr": "nodejs_eventloop_utilization_ratio{exported_job=\"{{EXPORTED_JOB}}\"}",
           "legendFormat": "ELU"
+        }
+      ]
+    },
+    {
+      "id": 23,
+      "type": "stat",
+      "title": "Heap Used (MB)",
+      "description": "Uso atual do heap V8 em megabytes (por pod).",
+      "gridPos": { "x": 0, "y": 46, "w": 12, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "background",
+        "graphMode": "area",
+        "orientation": "horizontal"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "yellow", "value": 70 },
+              { "color": "red", "value": 85 }
+            ]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum without(v8js_heap_space_name)(v8js_memory_heap_used_bytes{exported_job=\"{{EXPORTED_JOB}}\"})",
+          "legendFormat": "{{ pod }}",
+          "instant": true
+        }
+      ]
+    },
+    {
+      "id": 24,
+      "type": "stat",
+      "title": "Heap Limit (MB)",
+      "description": "Limite máximo do heap V8 em megabytes. Configurar NODE_OPTIONS=--max-old-space-size-percentage=60 para elevar acima do padrão V8 (~25% do memory.limit).",
+      "gridPos": { "x": 12, "y": 46, "w": 12, "h": 4 },
+      "options": {
+        "reduceOptions": { "calcs": ["lastNotNull"] },
+        "colorMode": "value",
+        "graphMode": "none",
+        "orientation": "horizontal"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "decmbytes",
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "blue", "value": null }]
+          }
+        }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "${datasource}" },
+          "expr": "sum without(v8js_heap_space_name)(v8js_memory_heap_limit_bytes{exported_job=\"{{EXPORTED_JOB}}\"})",
+          "legendFormat": "{{ pod }}",
+          "instant": true
         }
       ]
     }

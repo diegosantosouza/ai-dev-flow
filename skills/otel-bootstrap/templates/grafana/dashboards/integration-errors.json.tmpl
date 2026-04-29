@@ -37,7 +37,7 @@
     {
       "id": 1,
       "type": "stat",
-      "title": "Erros de Integração/s (5m)",
+      "title": "Erros de Integração/min (5m)",
       "description": "Taxa total de erros em chamadas externas por segundo nos últimos 5 min",
       "gridPos": { "x": 0, "y": 0, "w": 8, "h": 4 },
       "options": {
@@ -61,8 +61,8 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate({{SERVICE_NAME}}_integration_request_errors_total{{{SERVICE_NAME}}_marketplace=~\"$marketplace\"}[5m]))",
-          "legendFormat": "Erros/s",
+          "expr": "sum(rate({{SERVICE_NAME}}_integration_request_errors_total{{{SERVICE_NAME}}_marketplace=~\"$marketplace\"}[5m])) * 60",
+          "legendFormat": "Erros/min",
           "instant": true
         }
       ]
@@ -136,7 +136,7 @@
     {
       "id": 4,
       "type": "timeseries",
-      "title": "Erros/s por Marketplace e HTTP Status",
+      "title": "Erros/min por Marketplace e HTTP Status",
       "description": "Taxa de erros nas integrações por marketplace e código HTTP. Label http.response.status_code → http_response_status_code.",
       "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
       "fieldConfig": {
@@ -149,7 +149,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum by ({{SERVICE_NAME}}_marketplace, http_response_status_code)(rate({{SERVICE_NAME}}_integration_request_errors_total{{{SERVICE_NAME}}_marketplace=~\"$marketplace\"}[5m]))",
+          "expr": "sum by ({{SERVICE_NAME}}_marketplace, http_response_status_code)(rate({{SERVICE_NAME}}_integration_request_errors_total{{{SERVICE_NAME}}_marketplace=~\"$marketplace\"}[5m])) * 60",
           "legendFormat": "{{ {{SERVICE_NAME}}_marketplace }} HTTP {{ http_response_status_code }}"
         }
       ]
@@ -157,12 +157,12 @@
     {
       "id": 5,
       "type": "timeseries",
-      "title": "p95 Latência HTTP Client por Host Externo (s)",
-      "description": "Auto-instrumentação do Node OTel: http_client_request_duration_seconds_bucket. Usa SEGUNDOS (não ms) — convenção das auto-instrumentações.",
+      "title": "p95 Latência HTTP Client por Host Externo (ms)",
+      "description": "Auto-instrumentação do Node OTel: http_client_duration_milliseconds_bucket. ",
       "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
       "fieldConfig": {
         "defaults": {
-          "unit": "s",
+          "unit": "ms",
           "custom": { "lineWidth": 2, "fillOpacity": 5 }
         }
       },
@@ -170,7 +170,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "histogram_quantile(0.95, sum by (le, server_address)(rate(http_client_request_duration_seconds_bucket[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le, server_address)(rate(http_client_duration_milliseconds_bucket[5m])))",
           "legendFormat": "p95 {{ server_address }}"
         }
       ]

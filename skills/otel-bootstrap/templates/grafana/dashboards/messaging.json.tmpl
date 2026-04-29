@@ -61,7 +61,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"ack\",messaging_destination_name=~\"$subscription\"}[5m])) / sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{messaging_destination_name=~\"$subscription\"}[5m]))",
+          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"ack\",messaging_destination_name=~\"$subscription\"}[5m])) / sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{messaging_destination_name=~\"$subscription\"}[5m])) * 60",
           "legendFormat": "Ack rate",
           "instant": true
         }
@@ -70,7 +70,7 @@
     {
       "id": 2,
       "type": "stat",
-      "title": "Mensagens Processadas/s",
+      "title": "Mensagens Processadas/min",
       "description": "Taxa total de mensagens consumidas (todos outcomes) por segundo",
       "gridPos": { "x": 8, "y": 0, "w": 8, "h": 4 },
       "options": {
@@ -88,7 +88,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{messaging_destination_name=~\"$subscription\"}[5m]))",
-          "legendFormat": "Msgs/s",
+          "legendFormat": "Msgs/min",
           "instant": true
         }
       ]
@@ -96,7 +96,7 @@
     {
       "id": 3,
       "type": "stat",
-      "title": "Nacks/s",
+      "title": "Nacks/min",
       "description": "Taxa de mensagens com falha no processamento (nack)",
       "gridPos": { "x": 16, "y": 0, "w": 8, "h": 4 },
       "options": {
@@ -120,8 +120,8 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"nack\",messaging_destination_name=~\"$subscription\"}[5m]))",
-          "legendFormat": "Nacks/s",
+          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"nack\",messaging_destination_name=~\"$subscription\"}[5m])) * 60",
+          "legendFormat": "Nacks/min",
           "instant": true
         }
       ]
@@ -129,7 +129,7 @@
     {
       "id": 4,
       "type": "timeseries",
-      "title": "Mensagens/s por Subscription e Outcome",
+      "title": "Mensagens/min por Subscription e Outcome",
       "description": "Taxa de mensagens por subscription. Label messaging.destination.name → messaging_destination_name no Prometheus.",
       "gridPos": { "x": 0, "y": 4, "w": 12, "h": 8 },
       "fieldConfig": {
@@ -146,7 +146,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum by (messaging_destination_name, outcome)(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{messaging_destination_name=~\"$subscription\"}[5m]))",
+          "expr": "sum by (messaging_destination_name, outcome)(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{messaging_destination_name=~\"$subscription\"}[5m])) * 60",
           "legendFormat": "{{ messaging_destination_name }} / {{ outcome }}"
         }
       ]

@@ -48,7 +48,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "100 * sum(rate({{SERVICE_NAME}}_sync_runs_total{outcome=\"failure\"}[5m])) / sum(rate({{SERVICE_NAME}}_sync_runs_total[5m]))",
+          "expr": "100 * sum(rate({{SERVICE_NAME}}_sync_runs_total{outcome=\"failure\"}[5m])) / sum(rate({{SERVICE_NAME}}_sync_runs_total[5m])) * 60",
           "legendFormat": "Error rate",
           "instant": true
         }
@@ -57,7 +57,7 @@
     {
       "id": 2,
       "type": "stat",
-      "title": "Syncs/s",
+      "title": "Syncs/min",
       "description": "Taxa total de sincronizações por segundo (todos outcomes)",
       "gridPos": { "x": 6, "y": 0, "w": 6, "h": 4 },
       "options": {
@@ -75,7 +75,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "expr": "sum(rate({{SERVICE_NAME}}_sync_runs_total[5m]))",
-          "legendFormat": "Syncs/s",
+          "legendFormat": "Syncs/min",
           "instant": true
         }
       ]
@@ -83,7 +83,7 @@
     {
       "id": 3,
       "type": "stat",
-      "title": "Mensagens Pub/Sub/s",
+      "title": "Mensagens Pub/Sub/min",
       "description": "Taxa de mensagens Pub/Sub processadas por segundo (todos outcomes)",
       "gridPos": { "x": 12, "y": 0, "w": 6, "h": 4 },
       "options": {
@@ -100,8 +100,8 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total[5m]))",
-          "legendFormat": "Msgs/s",
+          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total[5m])) * 60",
+          "legendFormat": "Msgs/min",
           "instant": true
         }
       ]
@@ -109,7 +109,7 @@
     {
       "id": 4,
       "type": "stat",
-      "title": "Erros Integração/s",
+      "title": "Erros Integração/min",
       "description": "Taxa de erros em chamadas externas (Innovaro, VMPay) por segundo",
       "gridPos": { "x": 18, "y": 0, "w": 6, "h": 4 },
       "options": {
@@ -133,8 +133,8 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate({{SERVICE_NAME}}_integration_request_errors_total[5m]))",
-          "legendFormat": "Erros/s",
+          "expr": "sum(rate({{SERVICE_NAME}}_integration_request_errors_total[5m])) * 60",
+          "legendFormat": "Erros/min",
           "instant": true
         }
       ]
@@ -163,7 +163,7 @@
     {
       "id": 6,
       "type": "timeseries",
-      "title": "Nack Rate por Subscription (msgs/s)",
+      "title": "Nack Rate por Subscription (msgs/min)",
       "description": "Mensagens Pub/Sub que resultaram em nack (falha no processamento)",
       "gridPos": { "x": 12, "y": 4, "w": 12, "h": 8 },
       "fieldConfig": {
@@ -176,7 +176,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum by (messaging_destination_name)(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"nack\"}[5m]))",
+          "expr": "sum by (messaging_destination_name)(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"nack\"}[5m])) * 60",
           "legendFormat": "{{ messaging_destination_name }}"
         }
       ]
@@ -214,7 +214,7 @@
     {
       "id": 9,
       "type": "stat",
-      "title": "HTTP Requests/s",
+      "title": "HTTP Requests/min",
       "description": "Taxa total de requisições HTTP recebidas pela API REST do {{SERVICE_NAME}}",
       "gridPos": { "x": 0, "y": 20, "w": 6, "h": 4 },
       "options": {
@@ -231,8 +231,8 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[5m]))",
-          "legendFormat": "Requests/s",
+          "expr": "sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[5m])) * 60",
+          "legendFormat": "Requests/min",
           "instant": true
         }
       ]
