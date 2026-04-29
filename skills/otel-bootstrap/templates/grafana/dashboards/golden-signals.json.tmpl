@@ -472,7 +472,7 @@
       "id": 19,
       "type": "stat",
       "title": "Heap Used / Heap Limit (%)",
-      "description": "Percentual de uso do heap V8. Acima de 80% indica pressão de memória. Requer v8js_memory_heap_* disponível no Prometheus.",
+      "description": "Ratio heap_used / space_size por heap space. ATENÇÃO: 'limit' = space_size (bytes commitados atualmente), NÃO o teto heap_size_limit do --max-old-space-size. V8 usa ~90% do que commitou — 85-95% é normal. Risco real: heap_used total vs. heap_size_limit global. Adicione NODE_OPTIONS=--max-old-space-size-percentage=60 ao deploy K8s.",
       "gridPos": { "x": 12, "y": 34, "w": 6, "h": 4 },
       "options": {
         "reduceOptions": { "calcs": ["lastNotNull"] },
@@ -593,67 +593,40 @@
     },
     {
       "id": 23,
-      "type": "stat",
-      "title": "Heap Used (MB)",
-      "description": "Uso atual do heap V8 em megabytes (por pod).",
-      "gridPos": { "x": 0, "y": 46, "w": 12, "h": 4 },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
-        "colorMode": "background",
-        "graphMode": "area",
-        "orientation": "horizontal"
-      },
+      "type": "timeseries",
+      "title": "Heap V8 — Used e Limit (MB) por réplica",
+      "description": "Used = bytes em uso. Limit = space_size (bytes commitados pelo V8 para cada heap space, NÃO o teto heap_size_limit). Gap entre as linhas (~5-10 MB) é o buffer antes do GC expandir. instance = IP do OTel collector no nó K8s. Tendência crescente de used = possível memory leak.",
+      "gridPos": { "x": 0, "y": 46, "w": 24, "h": 8 },
       "fieldConfig": {
         "defaults": {
           "unit": "bytes",
-          "decimals": 1,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [
-              { "color": "green", "value": null },
-              { "color": "yellow", "value": 70000000 },
-              { "color": "red", "value": 85000000 }
+          "custom": { "lineWidth": 2, "fillOpacity": 5 },
+          "min": 0
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": ".*limit.*" },
+            "properties": [
+              { "id": "custom.lineStyle", "value": { "dash": [5, 5], "fill": "dash" } },
+              { "id": "custom.fillOpacity", "value": 0 }
             ]
           }
-        }
+        ]
+      },
+      "options": {
+        "legend": { "displayMode": "list", "placement": "bottom" },
+        "tooltip": { "mode": "multi" }
       },
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "expr": "sum without(v8js_heap_space_name)(v8js_memory_heap_used_bytes{exported_job=\"{{EXPORTED_JOB}}\"})",
-          "legendFormat": "{{ instance }}",
-          "instant": true
-        }
-      ]
-    },
-    {
-      "id": 24,
-      "type": "stat",
-      "title": "Heap Limit (MB)",
-      "description": "Limite máximo do heap V8 em megabytes. Configurar NODE_OPTIONS=--max-old-space-size-percentage=60 para elevar acima do padrão V8 (~25% do memory.limit).",
-      "gridPos": { "x": 12, "y": 46, "w": 12, "h": 4 },
-      "options": {
-        "reduceOptions": { "calcs": ["lastNotNull"] },
-        "colorMode": "value",
-        "graphMode": "none",
-        "orientation": "horizontal"
-      },
-      "fieldConfig": {
-        "defaults": {
-          "unit": "bytes",
-          "decimals": 1,
-          "thresholds": {
-            "mode": "absolute",
-            "steps": [{ "color": "blue", "value": null }]
-          }
-        }
-      },
-      "targets": [
+          "legendFormat": "{{ instance }} used"
+        },
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "expr": "sum without(v8js_heap_space_name)(v8js_memory_heap_limit_bytes{exported_job=\"{{EXPORTED_JOB}}\"})",
-          "legendFormat": "{{ instance }}",
-          "instant": true
+          "legendFormat": "{{ instance }} limit (space_size)"
         }
       ]
     }
