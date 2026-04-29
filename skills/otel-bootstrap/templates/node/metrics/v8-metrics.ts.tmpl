@@ -1,0 +1,29 @@
+import { metrics } from '@opentelemetry/api';
+import * as v8 from 'v8';
+
+export class V8Metrics {
+  private static initialized = false;
+
+  static init(): void {
+    if (V8Metrics.initialized) return;
+    V8Metrics.initialized = true;
+
+    const meter = metrics.getMeter(
+      process.env.OTEL_SERVICE_NAME ?? process.env.npm_package_name ?? '{{SERVICE_NAME}}',
+    );
+
+    // Exposes the real V8 hard heap cap so dashboards can compute
+    // true utilization: heap_used / heap_size_limit  (not heap_used / space_size)
+    const heapSizeLimitGauge = meter.createObservableGauge(
+      '{{SERVICE_NAME}}.heap.size.limit',
+      {
+        description: 'V8 heap_size_limit from v8.getHeapStatistics(). The absolute max the heap can grow to (set by --max-old-space-size-percentage or V8 default).',
+        unit: 'By',
+      },
+    );
+
+    heapSizeLimitGauge.addCallback((result) => {
+      result.observe(v8.getHeapStatistics().heap_size_limit);
+    });
+  }
+}

@@ -472,7 +472,7 @@
       "id": 19,
       "type": "stat",
       "title": "Heap Used / Heap Limit (%)",
-      "description": "Ratio heap_used / space_size por heap space. ATENÇÃO: 'limit' = space_size (bytes commitados atualmente), NÃO o teto heap_size_limit do --max-old-space-size. V8 usa ~90% do que commitou — 85-95% é normal. Risco real: heap_used total vs. heap_size_limit global. Adicione NODE_OPTIONS=--max-old-space-size-percentage=60 ao deploy K8s.",
+      "description": "% do heap V8 em relação ao heap_size_limit real (v8.getHeapStatistics()). Requer a métrica {{SERVICE_NAME}}_heap_size_limit_bytes emitida pelo V8Metrics.init() no bootstrap. Acima de 80% = risco de OOM; adicionar NODE_OPTIONS=--max-old-space-size-percentage=60 ao deploy K8s.",
       "gridPos": { "x": 12, "y": 34, "w": 6, "h": 4 },
       "options": {
         "reduceOptions": { "calcs": ["lastNotNull"] },
@@ -497,7 +497,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum without (v8js_heap_space_name)(v8js_memory_heap_used_bytes{exported_job=\"{{EXPORTED_JOB}}\"}) / sum without (v8js_heap_space_name)(v8js_memory_heap_limit_bytes{exported_job=\"{{EXPORTED_JOB}}\"})",
+          "expr": "sum without(v8js_heap_space_name)(v8js_memory_heap_used_bytes{exported_job=\"{{EXPORTED_JOB}}\"}) / on(instance) {{SERVICE_NAME}}_heap_size_limit_bytes{exported_job=\"{{EXPORTED_JOB}}\"}",
           "legendFormat": "heap %",
           "instant": true
         }
@@ -625,8 +625,8 @@
         },
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum without(v8js_heap_space_name)(v8js_memory_heap_limit_bytes{exported_job=\"{{EXPORTED_JOB}}\"})",
-          "legendFormat": "{{ instance }} limit (space_size)"
+          "expr": "{{SERVICE_NAME}}_heap_size_limit_bytes{exported_job=\"{{EXPORTED_JOB}}\"}",
+          "legendFormat": "{{ instance }} heap_size_limit (real cap)"
         }
       ]
     }

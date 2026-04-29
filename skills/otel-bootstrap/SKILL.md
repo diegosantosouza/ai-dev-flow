@@ -82,6 +82,7 @@ Write these files to the target service. Source templates are in `${CLAUDE_SKILL
 | `attributes.ts.tmpl` | `src/shared/tracer/attributes.ts` |
 | `metrics/base-metrics.ts.tmpl` | `src/shared/tracer/metrics/base-metrics.ts` |
 | `metrics/integration-metrics.ts.tmpl` | `src/shared/tracer/metrics/integration-metrics.ts` |
+| `metrics/v8-metrics.ts.tmpl` | `src/shared/tracer/metrics/v8-metrics.ts` |
 
 Create the `src/shared/tracer/metrics/` directory if it does not exist.
 
