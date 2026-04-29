@@ -605,14 +605,14 @@
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "decmbytes",
+          "unit": "bytes",
           "decimals": 1,
           "thresholds": {
             "mode": "absolute",
             "steps": [
               { "color": "green", "value": null },
-              { "color": "yellow", "value": 70 },
-              { "color": "red", "value": 85 }
+              { "color": "yellow", "value": 70000000 },
+              { "color": "red", "value": 85000000 }
             ]
           }
         }
@@ -621,7 +621,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "expr": "sum without(v8js_heap_space_name)(v8js_memory_heap_used_bytes{exported_job=\"{{EXPORTED_JOB}}\"})",
-          "legendFormat": "{{ pod }}",
+          "legendFormat": "{{ instance }}",
           "instant": true
         }
       ]
@@ -640,7 +640,7 @@
       },
       "fieldConfig": {
         "defaults": {
-          "unit": "decmbytes",
+          "unit": "bytes",
           "decimals": 1,
           "thresholds": {
             "mode": "absolute",
@@ -652,7 +652,7 @@
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
           "expr": "sum without(v8js_heap_space_name)(v8js_memory_heap_limit_bytes{exported_job=\"{{EXPORTED_JOB}}\"})",
-          "legendFormat": "{{ pod }}",
+          "legendFormat": "{{ instance }}",
           "instant": true
         }
       ]
