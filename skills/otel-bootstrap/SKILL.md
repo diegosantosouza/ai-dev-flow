@@ -334,7 +334,7 @@ If `exported_job` has an unexpected name:
 - [ ] Go: all generated `.go` files have correct package declarations
 - [ ] No domain-specific code from the reference service in generated files (business metrics, proprietary integrations, internal decorators)
 - [ ] Heap MB panels (id=23 Heap Used, id=24 Heap Limit) present in golden-signals dashboard
-- [ ] All absolute rate panels use `* 60` and show `/min` in title/legend
+- [ ] All absolute rate panels use `* 60`, show `/min` in title/legend, and use `"unit": "reqpm"`
 - [ ] HTTP client latency panels use `http_client_duration_milliseconds_bucket` (not `_request_duration_seconds_`)
 - [ ] Step 3.5 audit ran — existing consumers/crons/HTTP clients patched or confirmed already extending base classes
 - [ ] `NODE_OPTIONS=--max-old-space-size-percentage=60` added to K8s deployment (Step 7)
