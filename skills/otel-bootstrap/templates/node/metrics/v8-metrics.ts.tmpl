@@ -9,7 +9,7 @@ export class V8Metrics {
     V8Metrics.initialized = true;
 
     const meter = metrics.getMeter(
-      process.env.OTEL_SERVICE_NAME ?? process.env.npm_package_name ?? '{{SERVICE_NAME}}',
+      process.env.OTEL_SERVICE_NAME ?? '{{SERVICE_NAME}}',
     );
 
     // Exposes the real V8 hard heap cap so dashboards can compute
