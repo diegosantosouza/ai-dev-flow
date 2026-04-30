@@ -44,17 +44,17 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "histogram_quantile(0.50, sum by (le)(rate(http_server_duration_milliseconds_bucket{exported_job=\"{{EXPORTED_JOB}}\"}[5m])))",
+          "expr": "histogram_quantile(0.50, sum by (le)(rate(http_server_duration_milliseconds_bucket{exported_job=\"{{EXPORTED_JOB}}\"}[$__range])))",
           "legendFormat": "p50"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "histogram_quantile(0.95, sum by (le)(rate(http_server_duration_milliseconds_bucket{exported_job=\"{{EXPORTED_JOB}}\"}[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le)(rate(http_server_duration_milliseconds_bucket{exported_job=\"{{EXPORTED_JOB}}\"}[$__range])))",
           "legendFormat": "p95"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "histogram_quantile(0.99, sum by (le)(rate(http_server_duration_milliseconds_bucket{exported_job=\"{{EXPORTED_JOB}}\"}[5m])))",
+          "expr": "histogram_quantile(0.99, sum by (le)(rate(http_server_duration_milliseconds_bucket{exported_job=\"{{EXPORTED_JOB}}\"}[$__range])))",
           "legendFormat": "p99"
         }
       ]
@@ -75,17 +75,17 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "histogram_quantile(0.95, sum by (le, {{SERVICE_NAME}}_marketplace)(rate({{SERVICE_NAME}}_sync_run_duration_milliseconds_bucket[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le, {{SERVICE_NAME}}_marketplace)(rate({{SERVICE_NAME}}_sync_run_duration_milliseconds_bucket[$__range])))",
           "legendFormat": "sync {{ {{SERVICE_NAME}}_marketplace }}"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "histogram_quantile(0.95, sum by (le)(rate({{SERVICE_NAME}}_messaging_process_duration_milliseconds_bucket[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le)(rate({{SERVICE_NAME}}_messaging_process_duration_milliseconds_bucket[$__range])))",
           "legendFormat": "pubsub"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "histogram_quantile(0.95, sum by (le)(rate({{SERVICE_NAME}}_cron_run_duration_milliseconds_bucket[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le)(rate({{SERVICE_NAME}}_cron_run_duration_milliseconds_bucket[$__range])))",
           "legendFormat": "cron"
         }
       ]
@@ -117,7 +117,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[5m])) * 60",
+          "expr": "sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[$__range])) * 60",
           "legendFormat": "req/min",
           "instant": true
         }
@@ -143,7 +143,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate({{SERVICE_NAME}}_sync_runs_total[5m])) * 60",
+          "expr": "sum(rate({{SERVICE_NAME}}_sync_runs_total[$__range])) * 60",
           "legendFormat": "syncs/min",
           "instant": true
         }
@@ -169,7 +169,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total[5m])) * 60",
+          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total[$__range])) * 60",
           "legendFormat": "msgs/min",
           "instant": true
         }
@@ -195,7 +195,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate({{SERVICE_NAME}}_order_split_created_total[5m])) * 60",
+          "expr": "sum(rate({{SERVICE_NAME}}_order_split_created_total[$__range])) * 60",
           "legendFormat": "splits/min",
           "instant": true
         }
@@ -217,7 +217,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum by (http_route)(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[5m])) * 60",
+          "expr": "sum by (http_route)(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[$__range])) * 60",
           "legendFormat": "{{ http_route }}"
         }
       ]
@@ -256,7 +256,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "100 * sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\",http_status_code=~\"5..\"}[5m])) / sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[5m]))",
+          "expr": "100 * sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\",http_status_code=~\"5..\"}[$__range])) / sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[$__range]))",
           "legendFormat": "5xx %",
           "instant": true
         }
@@ -289,7 +289,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "100 * sum(rate({{SERVICE_NAME}}_sync_runs_total{outcome=\"failure\"}[5m])) / sum(rate({{SERVICE_NAME}}_sync_runs_total[5m]))",
+          "expr": "100 * sum(rate({{SERVICE_NAME}}_sync_runs_total{outcome=\"failure\"}[$__range])) / sum(rate({{SERVICE_NAME}}_sync_runs_total[$__range]))",
           "legendFormat": "Sync failure %",
           "instant": true
         }
@@ -322,7 +322,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "100 * sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"nack\"}[5m])) / sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total[5m]))",
+          "expr": "100 * sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"nack\"}[$__range])) / sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total[$__range]))",
           "legendFormat": "Nack %",
           "instant": true
         }
@@ -355,7 +355,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate({{SERVICE_NAME}}_integration_request_errors_total[5m])) * 60",
+          "expr": "sum(rate({{SERVICE_NAME}}_integration_request_errors_total[$__range])) * 60",
           "legendFormat": "errors/min",
           "instant": true
         }
@@ -378,17 +378,17 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "100 * sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\",http_status_code=~\"5..\"}[5m])) / sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[5m]))",
+          "expr": "100 * sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\",http_status_code=~\"5..\"}[$__range])) / sum(rate(http_server_duration_milliseconds_count{exported_job=\"{{EXPORTED_JOB}}\"}[$__range]))",
           "legendFormat": "HTTP 5xx %"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "100 * sum(rate({{SERVICE_NAME}}_sync_runs_total{outcome=\"failure\"}[5m])) / sum(rate({{SERVICE_NAME}}_sync_runs_total[5m]))",
+          "expr": "100 * sum(rate({{SERVICE_NAME}}_sync_runs_total{outcome=\"failure\"}[$__range])) / sum(rate({{SERVICE_NAME}}_sync_runs_total[$__range]))",
           "legendFormat": "Sync failure %"
         },
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "100 * sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"nack\"}[5m])) / sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total[5m]))",
+          "expr": "100 * sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"nack\"}[$__range])) / sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total[$__range]))",
           "legendFormat": "PubSub nack %"
         }
       ]
@@ -530,7 +530,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "histogram_quantile(0.99, sum by (le)(rate(v8js_gc_duration_seconds_bucket{exported_job=\"{{EXPORTED_JOB}}\"}[5m]))) * 1000",
+          "expr": "histogram_quantile(0.99, sum by (le)(rate(v8js_gc_duration_seconds_bucket{exported_job=\"{{EXPORTED_JOB}}\"}[$__range]))) * 1000",
           "legendFormat": "GC p99",
           "instant": true
         }

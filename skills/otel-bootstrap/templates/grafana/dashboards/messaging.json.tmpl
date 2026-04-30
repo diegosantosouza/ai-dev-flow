@@ -61,7 +61,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"ack\",messaging_destination_name=~\"$subscription\"}[5m])) / sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{messaging_destination_name=~\"$subscription\"}[5m])) * 60",
+          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"ack\",messaging_destination_name=~\"$subscription\"}[$__range])) / sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{messaging_destination_name=~\"$subscription\"}[$__range])) * 60",
           "legendFormat": "Ack rate",
           "instant": true
         }
@@ -87,7 +87,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{messaging_destination_name=~\"$subscription\"}[5m]))",
+          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{messaging_destination_name=~\"$subscription\"}[$__range]))",
           "legendFormat": "Msgs/min",
           "instant": true
         }
@@ -120,7 +120,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"nack\",messaging_destination_name=~\"$subscription\"}[5m])) * 60",
+          "expr": "sum(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{outcome=\"nack\",messaging_destination_name=~\"$subscription\"}[$__range])) * 60",
           "legendFormat": "Nacks/min",
           "instant": true
         }
@@ -146,7 +146,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum by (messaging_destination_name, outcome)(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{messaging_destination_name=~\"$subscription\"}[5m])) * 60",
+          "expr": "sum by (messaging_destination_name, outcome)(rate({{SERVICE_NAME}}_messaging_consumed_messages_total{messaging_destination_name=~\"$subscription\"}[$__range])) * 60",
           "legendFormat": "{{ messaging_destination_name }} / {{ outcome }}"
         }
       ]
@@ -167,7 +167,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "histogram_quantile(0.95, sum by (le, messaging_destination_name)(rate({{SERVICE_NAME}}_messaging_process_duration_milliseconds_bucket{messaging_destination_name=~\"$subscription\"}[5m])))",
+          "expr": "histogram_quantile(0.95, sum by (le, messaging_destination_name)(rate({{SERVICE_NAME}}_messaging_process_duration_milliseconds_bucket{messaging_destination_name=~\"$subscription\"}[$__range])))",
           "legendFormat": "p95 {{ messaging_destination_name }}"
         }
       ]

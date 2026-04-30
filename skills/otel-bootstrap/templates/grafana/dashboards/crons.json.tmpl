@@ -72,7 +72,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "max by ({{SERVICE_NAME}}_cron_name)(rate({{SERVICE_NAME}}_cron_run_duration_milliseconds_sum{{{SERVICE_NAME}}_cron_name=~\"$cron\"}[30m]) / rate({{SERVICE_NAME}}_cron_run_duration_milliseconds_count{{{SERVICE_NAME}}_cron_name=~\"$cron\"}[30m]))",
+          "expr": "max by ({{SERVICE_NAME}}_cron_name)(rate({{SERVICE_NAME}}_cron_run_duration_milliseconds_sum{{{SERVICE_NAME}}_cron_name=~\"$cron\"}[$__range]) / rate({{SERVICE_NAME}}_cron_run_duration_milliseconds_count{{{SERVICE_NAME}}_cron_name=~\"$cron\"}[$__range]))",
           "legendFormat": "{{ {{SERVICE_NAME}}_cron_name }}",
           "instant": true,
           "format": "table"
@@ -102,7 +102,7 @@
       "targets": [
         {
           "datasource": { "type": "prometheus", "uid": "${datasource}" },
-          "expr": "sum by ({{SERVICE_NAME}}_cron_name, outcome)(rate({{SERVICE_NAME}}_cron_items_processed_total{{{SERVICE_NAME}}_cron_name=~\"$cron\"}[5m]))",
+          "expr": "sum by ({{SERVICE_NAME}}_cron_name, outcome)(rate({{SERVICE_NAME}}_cron_items_processed_total{{{SERVICE_NAME}}_cron_name=~\"$cron\"}[$__range]))",
           "legendFormat": "{{ {{SERVICE_NAME}}_cron_name }} / {{ outcome }}"
         }
       ]
