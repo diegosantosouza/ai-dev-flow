@@ -92,8 +92,11 @@ Skills are reusable playbooks installed globally at `~/.claude/skills/`. Unlike 
 | Skill | What it does |
 |-------|-------------|
 | `/otel-bootstrap <service-name>` | Bootstraps OpenTelemetry observability (tracer, metrics, Grafana dashboards, alert rules) into a Node.js or Go microservice. Auto-detects HTTP, PubSub, and cron components. |
+| `/clean-orders <input.json> <barcodes.json> [output.json]` | Removes products from an orders JSON file whose barcode/EAN appears in a blocklist. Auto-detects the barcode field (`barcode`/`ean`/`gtin`/`sku`) and the products array (`products`/`items`/`lineItems`). Orders that become empty are dropped from the output. |
 
-See [`skills/otel-bootstrap/README.md`](skills/otel-bootstrap/README.md) for full usage and generated file list.
+See individual READMEs for full usage:
+- [`skills/otel-bootstrap/README.md`](skills/otel-bootstrap/README.md)
+- [`skills/clean-orders/README.md`](skills/clean-orders/README.md)
 
 ## Installation
 
@@ -187,10 +190,13 @@ User: /commit
 │   ├── review.md              # /review
 │   └── commit.md              # /commit
 └── skills/
-    └── otel-bootstrap/        # /otel-bootstrap <service-name>
+    ├── otel-bootstrap/        # /otel-bootstrap <service-name>
+    │   ├── SKILL.md
+    │   ├── templates/         # node/, go/, grafana/
+    │   └── scripts/           # render.sh, detect.sh, validate.sh
+    └── clean-orders/          # /clean-orders <input> <barcodes> [output]
         ├── SKILL.md
-        ├── templates/         # node/, go/, grafana/
-        └── scripts/           # render.sh, detect.sh, validate.sh
+        └── scripts/           # clean.js (zero deps)
 ```
 
 Each agent is a Markdown file with YAML frontmatter that defines its model, tools, permissions, and system prompt. Commands are thin wrappers that delegate to the right agent.
