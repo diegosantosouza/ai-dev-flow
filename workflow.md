@@ -153,7 +153,7 @@ Cada um tem seu próprio system prompt, ferramentas permitidas e modelo.
 name: researcher
 description: Quando usar este agent (Claude lê isso para decidir)
 tools: Read, Grep, Glob, Bash       # Ferramentas permitidas
-model: haiku                         # haiku | sonnet | opus | inherit
+model: haiku                         # haiku | sonnet | opus | fable | inherit (ou ID completo, ex: claude-opus-4-8)
 effort: low                          # high | medium | low — profundidade de raciocínio
 maxTurns: 10                         # Limite de turnos antes de parar
 memory: user                         # user | project | local
@@ -184,6 +184,9 @@ System prompt do agent vai aqui em Markdown.
 | `hooks` | Hooks que rodam apenas enquanto este agent está ativo |
 | `maxTurns` | Limite de turnos antes de parar |
 | `effort` | Profundidade de raciocínio: `high` (pensa mais), `medium`, `low` (responde rápido) |
+| `mcpServers` | Servidores MCP que o agent pode acessar (por referência ou inline) |
+
+> Subagents **não herdam** skills da sessão principal — contexto começa limpo. Use `skills:` para pré-carregar, ou o agent descobre skills dinamicamente via a ferramenta Skill em runtime.
 
 ### Modelos e quando usar cada um
 
@@ -192,6 +195,7 @@ System prompt do agent vai aqui em Markdown.
 | **haiku** | Baixo | Rápido | Pesquisa, testes, buscas simples |
 | **sonnet** | Médio | Médio | Code review, análise, implementação moderada |
 | **opus** | Alto | Lento | Arquitetura, raciocínio complexo |
+| **fable** | Mais alto | Mais lento | Tier de fronteira — reserve para o que opus não dá conta (raro) |
 | **inherit** | (herda) | (herda) | Quando quer o mesmo modelo da sessão principal |
 
 ### Estratégia de custo por fase

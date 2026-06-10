@@ -64,6 +64,7 @@ Model selection is intentional, not arbitrary:
 - **sonnet** for `code-reviewer` and `debugger` — analytical work that benefits from strong reasoning without needing the full weight of opus.
 - **haiku** for `researcher`, `test-runner`, `doc-writer`, `committer` — mechanical tasks where speed matters more than depth.
 - **Main session uses `opusplan`** — Opus during `/plan` (decisions matter most here), Sonnet during `/implement` (execution is more mechanical).
+- **fable** — the highest tier available; intentionally **not** assigned to any default agent. Reserve it for frontier problems that genuinely exceed opus. Most work never needs it.
 
 ## Workflow Cost per Phase
 
