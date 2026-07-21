@@ -145,6 +145,11 @@ Cada um tem seu próprio system prompt, ferramentas permitidas e modelo.
 | `committer` | haiku | baixo | Bash + Read (bypassPermissions) | Não | Criar commits descritivos |
 
 > **Sessão principal usa `opusplan`**: opus durante `/plan` (decisões importam), sonnet durante `/implement` (execução).
+>
+> **Context7 é opcional**: as ferramentas Context7 do `architect`
+> (`mcp__plugin_context7_context7__*`) só funcionam se você tiver o
+> [Context7](https://github.com/upstash/context7) configurado como servidor MCP.
+> Sem ele, essas ferramentas viram no-op e o architect usa `WebSearch`/`WebFetch`.
 
 ### Anatomia de um subagent
 
@@ -158,7 +163,7 @@ effort: low                          # high | medium | low — profundidade de r
 maxTurns: 10                         # Limite de turnos antes de parar
 memory: user                         # user | project | local
 background: false                    # true = roda em paralelo
-permissionMode: default              # default | acceptEdits | dontAsk | plan
+permissionMode: default              # default | acceptEdits | auto | dontAsk | bypassPermissions | plan | manual
 hooks:                               # hooks específicos deste agent
   PreToolUse:
     - matcher: "Bash"
@@ -183,7 +188,7 @@ System prompt do agent vai aqui em Markdown.
 | `skills` | Skills pré-carregadas no contexto do agent |
 | `hooks` | Hooks que rodam apenas enquanto este agent está ativo |
 | `maxTurns` | Limite de turnos antes de parar |
-| `effort` | Profundidade de raciocínio: `high` (pensa mais), `medium`, `low` (responde rápido) |
+| `effort` | Profundidade de raciocínio: `max`/`xhigh` (pensa mais), `high`, `medium`, `low` (responde rápido) |
 | `mcpServers` | Servidores MCP que o agent pode acessar (por referência ou inline) |
 
 > Subagents **não herdam** skills da sessão principal — contexto começa limpo. Use `skills:` para pré-carregar, ou o agent descobre skills dinamicamente via a ferramenta Skill em runtime.
@@ -218,15 +223,20 @@ A escolha de modelo para cada agent não é arbitrária:
 ### Como criar novos agents
 
 ```bash
-# Via interface interativa (recomendado)
-/agents
+# Peça ao Claude para escrever o arquivo por você (recomendado)
+# ex: "crie um subagent chamado accessibility-reviewer que..."
 
-# Ou crie o arquivo manualmente
+# Ou crie/edite o arquivo manualmente
 ~/.claude/agents/meu-agent.md
 
 # Ou via CLI (temporário, só para a sessão)
 claude --agents '{"meu-agent": {"description": "...", "prompt": "...", "model": "haiku"}}'
 ```
+
+> A partir do Claude Code v2.1.198, `/agents` **não** abre mais um wizard de
+> criação interativo — ele só lista os agents e lembra você de pedir ao Claude
+> ou editar `~/.claude/agents/` diretamente.
+> Fonte: <https://code.claude.com/docs/en/sub-agents>
 
 ### Memória persistente
 

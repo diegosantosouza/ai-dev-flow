@@ -18,6 +18,24 @@
 - Run `/review` before merging, `/commit` to ship.
 - Keep this file updated as the project evolves (Current Focus, Known Issues).
 
+## Scaling This File
+
+Keep CLAUDE.md focused (~200 lines is a good ceiling). When it grows past that:
+
+- **`@path` imports** — pull in shared docs on load: `@docs/architecture.md`, `@~/.claude/my-conventions.md`.
+- **`.claude/rules/*.md`** — put topic rules in their own files with `paths:` frontmatter so they
+  load only when Claude touches matching files (e.g. testing rules only when a `**/*.test.ts` is open),
+  keeping always-on context lean:
+
+  ```markdown
+  ---
+  paths: ["**/*.test.ts", "**/*.spec.ts"]
+  ---
+  Test conventions that apply only when working on test files.
+  ```
+
+  See <https://code.claude.com/docs/en/memory>.
+
 ## Architecture
 
 [High-level project structure]

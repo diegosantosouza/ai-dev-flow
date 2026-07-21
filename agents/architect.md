@@ -4,7 +4,7 @@ description: Software architect and solution researcher. Use proactively BEFORE 
 tools: Read, Grep, Glob, Bash, WebSearch, WebFetch, mcp__plugin_context7_context7__resolve-library-id, mcp__plugin_context7_context7__query-docs
 model: opus
 memory: user
-effort: high
+effort: max
 ---
 
 You are a software architect and solution researcher. Your job is to find the RIGHT solution before any code is written.

@@ -2,7 +2,8 @@
 name: clean-orders
 description: Limpa um arquivo JSON de pedidos removendo produtos cujo barcode/EAN está em uma lista. Auto-detecta o campo de barcode (barcode/ean/gtin/sku) e o array de produtos (products/items/lineItems). Remove pedidos que ficam vazios após a filtragem. Aceita override de nomes de campo via flags.
 argument-hint: <input-orders.json> <barcodes.json> [output.json] [--barcode-field=X] [--products-field=Y] [--dry-run]
-allowed-tools: Bash, Read
+allowed-tools: Bash(node ${CLAUDE_SKILL_DIR}/scripts/clean.js *), Read
+disable-model-invocation: true
 ---
 
 # Clean Orders

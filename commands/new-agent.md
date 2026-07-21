@@ -1,3 +1,8 @@
+---
+description: Scaffold a new subagent file in the agents/ directory.
+argument-hint: [agent-name]
+---
+
 Scaffold a new subagent file in the agents/ directory.
 
 If $ARGUMENTS is provided, use it as the agent name. Otherwise, ask the user.
@@ -6,8 +11,8 @@ Steps:
 1. Collect the following information (use AskUserQuestion for any not provided):
    - **Name**: kebab-case identifier (e.g. `accessibility-reviewer`)
    - **Description**: one-line starting with an action verb + "Use proactively when <trigger>"
-   - **Model**: haiku | sonnet | opus
-   - **Effort**: low | medium | high
+   - **Model**: haiku | sonnet | opus | fable | inherit (or a full id, e.g. `claude-opus-4-8`)
+   - **Effort**: low | medium | high | xhigh | max
    - **Memory**: yes (user) or no
    - **Tools**: comma-separated list (default: `Read, Grep, Glob, Bash`)
    - **maxTurns**: integer (suggested: haiku→15, sonnet→20, opus→none)

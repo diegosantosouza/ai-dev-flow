@@ -4,6 +4,7 @@ description: Bootstrap the Housi OpenTelemetry observability pattern (tracer, cu
 argument-hint: <service-name>
 arguments: service_name
 allowed-tools: Read, Write, Edit, Glob, Grep, Bash
+disable-model-invocation: true
 ---
 
 # OTel Bootstrap — `$service_name`

@@ -110,6 +110,8 @@ chmod +x install.sh uninstall.sh
 
 This symlinks agents, commands, and the global `CLAUDE.md` into `~/.claude/`. Existing files are backed up as `.bak`.
 
+> **Optional — Context7 MCP.** The `architect` agent lists Context7 tools (`mcp__plugin_context7_context7__*`) to query library docs. These only work if [Context7](https://github.com/upstash/context7) is configured as an MCP server in your environment. Without it, those tools silently no-op and the architect falls back to `WebSearch`/`WebFetch` — everything still works, just without live library-doc lookups. See the [subagent MCP docs](https://code.claude.com/docs/en/sub-agents).
+
 To remove:
 
 ```bash
