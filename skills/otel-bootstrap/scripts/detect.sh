@@ -66,7 +66,7 @@ if [ "$language" = "go" ]; then
     gomod="${TARGET_DIR}/go.mod"
 
     if grep -qE 'github.com/(gin-gonic/gin|labstack/echo|go-chi/chi|gofiber/fiber)' "$gomod" 2>/dev/null \
-       || find "${TARGET_DIR}" -name "*.go" -exec grep -l '"net/http"' {} \; 2>/dev/null | grep -q .; then
+       || find "${TARGET_DIR}" -name "*.go" -exec grep -lE 'http\.(ListenAndServe(TLS)?|Serve\(|HandleFunc|Handle\()' {} \; 2>/dev/null | grep -q .; then
         has_http="true"
     fi
 

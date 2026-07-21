@@ -19,6 +19,11 @@ set -euo pipefail
 : "${SRC_DIR:?SRC_DIR is required}"
 : "${DST_DIR:?DST_DIR is required}"
 
+if ! [[ "$SERVICE_NAME" =~ ^[a-z0-9-]+$ ]]; then
+    echo "[render] ERROR: SERVICE_NAME must match ^[a-z0-9-]+\$ (lowercase letters, digits, hyphens only), got: '${SERVICE_NAME}'" >&2
+    exit 1
+fi
+
 SERVICE_UPPER="${SERVICE_UPPER:-$(echo "$SERVICE_NAME" | tr '[:lower:]' '[:upper:]' | tr '-' '_')}"
 SERVICE_PREFIX="${SERVICE_PREFIX:-${SERVICE_NAME}.}"
 EXPORTED_JOB="${EXPORTED_JOB:-${SERVICE_NAME}-api}"

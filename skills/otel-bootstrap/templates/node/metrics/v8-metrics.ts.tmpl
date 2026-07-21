@@ -17,7 +17,7 @@ export class V8Metrics {
     const heapSizeLimitGauge = meter.createObservableGauge(
       '{{SERVICE_NAME}}.heap.size.limit',
       {
-        description: 'V8 heap_size_limit from v8.getHeapStatistics(). The absolute max the heap can grow to (set by --max-old-space-size-percentage or V8 default).',
+        description: 'V8 heap_size_limit from v8.getHeapStatistics(). The absolute max the heap can grow to (set by --max-old-space-size or V8 default).',
         unit: 'By',
       },
     );

@@ -41,7 +41,7 @@ Read `package.json` or `go.mod` in the current directory and determine:
 - `has_cron = true` if directory `src/crons/` exists OR `"node-cron"` appears in `dependencies`
 
 **Component detection (Go):**
-- `has_http = true` if `go.mod` contains `github.com/gin-gonic/gin`, `github.com/labstack/echo`, `github.com/go-chi/chi` or `net/http` usage in `*.go` files
+- `has_http = true` if `go.mod` contains `github.com/gin-gonic/gin`, `github.com/labstack/echo`, `github.com/go-chi/chi`, or server-side `net/http` usage in `*.go` files (e.g. `http.ListenAndServe`, `http.HandleFunc`, `http.Handle`) — a bare `import "net/http"` is not enough, since HTTP client code imports it too
 - `has_pubsub = true` if `go.mod` contains `cloud.google.com/go/pubsub`
 - `has_cron = true` if `go.mod` contains `github.com/robfig/cron` OR directory `cmd/cron/` or `internal/cron/` exists
 
@@ -285,12 +285,15 @@ Check `deploy/{{SERVICE_NAME}}.yml` (or `deploy/k8s/` equivalent). Recommend add
 ```yaml
 containers:
   - name: {{SERVICE_NAME}}
+    resources:
+      limits:
+        memory: "400Mi"
     env:
     - name: NODE_OPTIONS
-      value: "--max-old-space-size-percentage=60"
+      value: "--max-old-space-size=240"
 ```
 
-**Why:** V8 auto-calculates `max_old_space_size` ≈ 25% of the container `memory.limits`. With a 400Mi limit the heap is capped at ~93MB, causing 85-95% heap utilization, constant GC pressure, and latency spikes. The `--max-old-space-size-percentage=60` flag is relative to the container limit (no hardcoded MB), so it adapts automatically if the limit changes. The 40% remainder covers off-heap memory (JIT code, native modules, buffers, thread stack).
+**Why:** V8 auto-calculates `max_old_space_size` ≈ 25% of the container `memory.limits`. With a 400Mi limit the heap is capped at ~93MB, causing 85-95% heap utilization, constant GC pressure, and latency spikes. Set `--max-old-space-size` explicitly to ~60% of the container's memory limit **in MB** (e.g. a 400Mi limit → `--max-old-space-size=240`), leaving the 40% remainder for off-heap memory (JIT code, native modules, buffers, thread stack). Note: `--max-old-space-size-percentage` is **not a shipped Node.js flag** — as of this writing it only exists as an open proposal ([nodejs/node#57447](https://github.com/nodejs/node/issues/57447)) — using it makes the process fail to start on current LTS. Recompute the MB value whenever `memory.limits` changes.
 
 Also check:
 - `requests.cpu` should be close to actual measured CPU usage, not inflated. Inflated `requests.cpu` makes HPA fire too late (or never). Target: `requests.cpu ≈ actual_p95_cpu`, with HPA `targetCPUUtilizationPercentage: 75`.
@@ -338,5 +341,5 @@ If `exported_job` has an unexpected name:
 - [ ] All absolute rate panels use `* 60`, show `/min` in title/legend, and use `"unit": "reqpm"`
 - [ ] HTTP client latency panels use `http_client_duration_milliseconds_bucket` (not `_request_duration_seconds_`)
 - [ ] Step 3.5 audit ran — existing consumers/crons/HTTP clients patched or confirmed already extending base classes
-- [ ] `NODE_OPTIONS=--max-old-space-size-percentage=60` added to K8s deployment (Step 7)
+- [ ] `NODE_OPTIONS=--max-old-space-size=<MB>` (≈60% of the container memory limit in MB) added to K8s deployment (Step 7)
 - [ ] Prometheus validation from Step 8 returned at least `http_server_duration_milliseconds_*` and `v8js_memory_heap_*`

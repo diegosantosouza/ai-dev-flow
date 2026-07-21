@@ -472,7 +472,7 @@
       "id": 19,
       "type": "stat",
       "title": "Heap Used / Heap Limit (%)",
-      "description": "% do heap V8 em relação ao heap_size_limit real (v8.getHeapStatistics()). Requer a métrica {{SERVICE_NAME}}_heap_size_limit_bytes emitida pelo V8Metrics.init() no bootstrap. Acima de 80% = risco de OOM; adicionar NODE_OPTIONS=--max-old-space-size-percentage=60 ao deploy K8s.",
+      "description": "% do heap V8 em relação ao heap_size_limit real (v8.getHeapStatistics()). Requer a métrica {{SERVICE_NAME}}_heap_size_limit_bytes emitida pelo V8Metrics.init() no bootstrap. Acima de 80% = risco de OOM; ajustar NODE_OPTIONS=--max-old-space-size=<MB> (~60% do limite de memória do container) no deploy K8s.",
       "gridPos": { "x": 12, "y": 34, "w": 6, "h": 4 },
       "options": {
         "reduceOptions": { "calcs": ["lastNotNull"] },

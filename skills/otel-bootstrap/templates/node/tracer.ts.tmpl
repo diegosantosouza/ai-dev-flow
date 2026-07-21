@@ -1,15 +1,13 @@
 import { context } from '@opentelemetry/api';
 import { getNodeAutoInstrumentations } from '@opentelemetry/auto-instrumentations-node';
 import { AsyncHooksContextManager } from '@opentelemetry/context-async-hooks';
-import { ExpressInstrumentation } from '@opentelemetry/instrumentation-express';
-import { B3Propagator } from '@opentelemetry/propagator-b3';
 import { resourceFromAttributes } from '@opentelemetry/resources';
 import {
   BatchLogRecordProcessor,
   type LogRecordProcessor,
 } from '@opentelemetry/sdk-logs';
 import { PeriodicExportingMetricReader } from '@opentelemetry/sdk-metrics';
-import { api, NodeSDK } from '@opentelemetry/sdk-node';
+import { NodeSDK } from '@opentelemetry/sdk-node';
 import {
   BatchSpanProcessor,
   SimpleSpanProcessor,
@@ -91,7 +89,6 @@ function startTracer(serviceName?: string): void {
       ? new SimpleSpanProcessor(traceExporter)
       : new BatchSpanProcessor(traceExporter);
 
-  api.propagation.setGlobalPropagator(new B3Propagator());
   const contextManager = new AsyncHooksContextManager().enable();
   context.setGlobalContextManager(contextManager);
 
@@ -110,7 +107,6 @@ function startTracer(serviceName?: string): void {
           },
         },
       }),
-      new ExpressInstrumentation(),
     ],
   });
 
