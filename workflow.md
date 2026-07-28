@@ -143,6 +143,8 @@ Cada um tem seu próprio system prompt, ferramentas permitidas e modelo.
 | `debugger` | sonnet | alto | Read-only + Bash | Não | Diagnosticar bugs e root causes |
 | `doc-writer` | haiku | baixo | Read + Write (acceptEdits) | Não | Criar/atualizar documentação |
 | `committer` | haiku | baixo | Bash + Read (bypassPermissions) | Não | Criar commits descritivos |
+| `observability-analyst` | sonnet | alto | Read-only + MCP Grafana (`--disable-write`) | Sim (user) | Correlacionar logs/métricas/traces do Grafana com o código, para RCA e auditoria de gaps de instrumentação |
+| `observability-builder` | sonnet | alto | Read + Write (local) + MCP Grafana read-only | Não | Gerar painéis e alertas como arquivos versionados em `deploy/grafana/` — nunca escreve direto no Grafana |
 
 > **Sessão principal usa `opusplan`**: opus durante `/plan` (decisões importam), sonnet durante `/implement` (execução).
 >

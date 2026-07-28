@@ -7,3 +7,7 @@ REPO_ROOT="$(git rev-parse --show-toplevel)"
 if git diff --cached --name-only | grep -q "^agents/.*\.md$"; then
   "$REPO_ROOT/scripts/validate-agents.sh" "$REPO_ROOT/agents"
 fi
+
+if git diff --cached --name-only | grep -q "^skills/.*/SKILL\.md$"; then
+  "$REPO_ROOT/scripts/validate-skills.sh" "$REPO_ROOT/skills" "$REPO_ROOT/agents"
+fi

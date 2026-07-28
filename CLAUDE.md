@@ -17,6 +17,8 @@ For any non-trivial task, follow the 3-phase cycle:
 - `debugger` (sonnet, read-only) — diagnose bugs, find root causes, recommend fixes
 - `doc-writer` (haiku, can write) — create or update documentation
 - `committer` (haiku, bypassPermissions) — create conventional git commits
+- `observability-analyst` (sonnet, read-only, persistent memory, Grafana MCP) — correlate Grafana logs/metrics/traces with local code; root-cause analysis and instrumentation-gap audits. Requires `GRAFANA_URL`/`GRAFANA_SERVICE_ACCOUNT_TOKEN`. Used by `/obs-rca`, `/obs-gap`.
+- `observability-builder` (sonnet, writes local files only, Grafana MCP read-only) — generates Grafana dashboard panels and alert rules as versioned files under `deploy/grafana/`. Never writes to Grafana directly. Used by `/obs-panel`, `/obs-alert`.
 
 Use them proactively to preserve context in the main conversation.
 

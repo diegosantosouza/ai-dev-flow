@@ -20,7 +20,14 @@ check_dependency() {
   fi
 }
 
+check_optional_dependency() {
+  if ! command -v "$1" &>/dev/null; then
+    echo "note: '$1' is not installed ($3). Install with: $2"
+  fi
+}
+
 check_dependency jq "brew install jq"
+check_optional_dependency yq "brew install yq" "only needed by /obs-apply to apply alert-rule YAML files"
 
 # --- directories ---
 
@@ -60,12 +67,20 @@ CLAUDE_MD_RENDERED="$REPO_DIR/.CLAUDE.md.rendered"
 
 sed "s|~/gandarfh/ai-dev-flow|$REPO_DIR|g" "$CLAUDE_MD_SRC" > "$CLAUDE_MD_RENDERED"
 
-# --- symlink agents ---
+# --- render + symlink agents (same path-placeholder substitution as CLAUDE.md, so an
+#     agent's mcpServers.command can reference a script inside this repo by absolute path) ---
+
+AGENTS_RENDERED_DIR="$REPO_DIR/.agents.rendered"
+mkdir -p "$AGENTS_RENDERED_DIR"
+chmod +x "$REPO_DIR/scripts/mcp-grafana-env.sh" 2>/dev/null || true
 
 echo "agents:"
 for f in "$REPO_DIR"/agents/*.md; do
   [ -f "$f" ] || continue
-  link_file "$f" "$CLAUDE_DIR/agents/$(basename "$f")"
+  name="$(basename "$f")"
+  rendered="$AGENTS_RENDERED_DIR/$name"
+  sed "s|~/gandarfh/ai-dev-flow|$REPO_DIR|g" "$f" > "$rendered"
+  link_file "$rendered" "$CLAUDE_DIR/agents/$name"
 done
 
 # --- symlink commands ---
@@ -145,8 +160,9 @@ ERRORS=0
 for f in "$REPO_DIR"/agents/*.md; do
   [ -f "$f" ] || continue
   name="$(basename "$f")"
+  rendered="$AGENTS_RENDERED_DIR/$name"
   target="$CLAUDE_DIR/agents/$name"
-  if [ ! -L "$target" ] || [ "$(readlink "$target")" != "$f" ]; then
+  if [ ! -L "$target" ] || [ "$(readlink "$target")" != "$rendered" ]; then
     echo "  FAIL  agents/$name symlink broken"
     ERRORS=$((ERRORS + 1))
   fi
@@ -176,6 +192,11 @@ fi
 
 # check agent frontmatter integrity
 if ! bash "$REPO_DIR/scripts/validate-agents.sh" "$REPO_DIR/agents"; then
+  ERRORS=$((ERRORS + 1))
+fi
+
+# check skill frontmatter integrity
+if ! bash "$REPO_DIR/scripts/validate-skills.sh" "$REPO_DIR/skills" "$REPO_DIR/agents"; then
   ERRORS=$((ERRORS + 1))
 fi
 

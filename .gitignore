@@ -1,3 +1,5 @@
 .CLAUDE.md.rendered
+.agents.rendered/
 .DS_Store
 *.bak
+.env

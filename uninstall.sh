@@ -34,8 +34,10 @@ unlink_file() {
 echo "agents:"
 for f in "$REPO_DIR"/agents/*.md; do
   [ -f "$f" ] || continue
-  unlink_file "$f" "$CLAUDE_DIR/agents/$(basename "$f")"
+  name="$(basename "$f")"
+  unlink_file "$REPO_DIR/.agents.rendered/$name" "$CLAUDE_DIR/agents/$name"
 done
+rm -rf "$REPO_DIR/.agents.rendered"
 
 echo ""
 echo "commands:"
