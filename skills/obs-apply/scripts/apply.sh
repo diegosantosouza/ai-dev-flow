@@ -60,7 +60,10 @@ fi
 # Load this repo's .env (if present) — fills gaps without overriding vars already
 # exported in the shell. Resolved relative to this script's own location so it works
 # whether it's invoked via the real repo path or a symlinked ~/.claude/skills/ copy.
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../.." && pwd)"
+# `cd -P` (physical) is required, not plain `cd`+`pwd`: bash's `cd` in its default
+# logical mode collapses ".." by string manipulation, so it never actually dereferences
+# the `skills/obs-apply` symlink — it lands inside ~/.claude instead of the real repo.
+REPO_ROOT="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && cd -P ../../.. && pwd -P)"
 if [ -f "$REPO_ROOT/.env" ]; then
   # Filter to a real temp file rather than `source <(...)` — bash 3.2 (macOS's
   # stock /bin/bash) silently sources nothing when given a process-substitution fd.
@@ -80,6 +83,7 @@ fi
 : "${GRAFANA_URL:?GRAFANA_URL must be set (in $REPO_ROOT/.env or the shell environment)}"
 : "${GRAFANA_ADMIN_TOKEN:?GRAFANA_ADMIN_TOKEN must be set (distinct from GRAFANA_SERVICE_ACCOUNT_TOKEN)}"
 
+GRAFANA_URL="${GRAFANA_URL%/}"
 AUTH_HEADER="Authorization: Bearer ${GRAFANA_ADMIN_TOKEN}"
 MODE="DRY-RUN"
 [ "$APPLY" = true ] && MODE="APPLY"
@@ -90,7 +94,10 @@ echo ""
 ERRORS=0
 
 check_no_placeholders() {
-  if grep -q '{{[A-Z_]*' "$1"; then
+  # Match only known skill/template placeholders (SERVICE_*, EXPORTED_JOB) — not
+  # Grafana's own `{{ le }}` / `{{ http_route }}` legend-format templating, which
+  # is legitimate and present in nearly every real dashboard panel.
+  if grep -qE '\{\{(SERVICE_[A-Z]+|EXPORTED_JOB)\}\}' "$1"; then
     echo "  FAIL  $1: unreplaced {{...}} placeholder remains"
     ERRORS=$((ERRORS + 1))
     return 1
@@ -135,6 +142,16 @@ duration_to_seconds() {
   esac
 }
 
+# resolve_dashboard_uid <title> -> prints the uid of a live dashboard with this exact
+# title, if one exists. Read-only (GET /api/search) — safe to call in dry-run too.
+# Grafana's dashboard API matches by uid, not title, so applying a file with no uid
+# against an already-imported dashboard creates a duplicate instead of updating it.
+resolve_dashboard_uid() {
+  local title="$1"
+  curl -sf -H "$AUTH_HEADER" -G --data-urlencode "query=$title" "$GRAFANA_URL/api/search" \
+    | jq -r --arg t "$title" '[.[] | select(.title == $t and .type == "dash-db")][0].uid // empty'
+}
+
 apply_dashboard() {
   local f="$1"
   echo "-- dashboard: $f"
@@ -148,12 +165,22 @@ apply_dashboard() {
 
   local title uid panel_count payload
   title=$(jq -r '.title // "(untitled)"' "$f")
-  uid=$(jq -r '.uid // "(none)"' "$f")
+  uid=$(jq -r '.uid // empty' "$f")
   panel_count=$(jq '.panels | length' "$f")
-  echo "  title: $title  uid: $uid  panels: $panel_count"
 
-  payload=$(jq -n --slurpfile dash "$f" \
-    '{dashboard: ($dash[0] | .id = null), overwrite: true, message: "applied via obs-apply"}')
+  if [ -z "$uid" ]; then
+    uid=$(resolve_dashboard_uid "$title")
+    if [ -n "$uid" ]; then
+      echo "  title: $title  uid: (none in file — found live uid=$uid by title match, will update it)  panels: $panel_count"
+    else
+      echo "  title: $title  uid: (none — no live dashboard with this title found, will create new)  panels: $panel_count"
+    fi
+  else
+    echo "  title: $title  uid: $uid  panels: $panel_count"
+  fi
+
+  payload=$(jq -n --slurpfile dash "$f" --arg uid "$uid" \
+    '{dashboard: ($dash[0] | .id = null | if $uid != "" then .uid = $uid else . end), overwrite: true, message: "applied via obs-apply"}')
 
   if [ "$APPLY" = false ]; then
     echo "  would POST $GRAFANA_URL/api/dashboards/db"

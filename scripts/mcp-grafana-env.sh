@@ -11,7 +11,10 @@
 # or overrides, it never removes an inherited variable.
 set -euo pipefail
 
-REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+# `cd -P` (physical): plain `cd`+`pwd` collapses ".." by string manipulation in
+# bash's default logical mode and never dereferences a symlink in the path — see
+# skills/obs-apply/scripts/apply.sh for the concrete case this bit us on.
+REPO_ROOT="$(cd -P "$(dirname "${BASH_SOURCE[0]}")" && cd -P .. && pwd -P)"
 ENV_FILE="$REPO_ROOT/.env"
 
 if [ -f "$ENV_FILE" ]; then
