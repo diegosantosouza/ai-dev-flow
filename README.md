@@ -124,7 +124,9 @@ chmod +x install.sh uninstall.sh
 ./install.sh
 ```
 
-This symlinks agents, commands, and the global `CLAUDE.md` into `~/.claude/`. Existing files are backed up as `.bak`.
+This links agents, commands, skills, and the global `CLAUDE.md` into `~/.claude/`. Existing files are backed up as `.bak` (an existing backup is never overwritten).
+
+On macOS/Linux the links are symlinks. On Windows they are directory junctions and file hardlinks: a POSIX symlink there needs Developer Mode or admin, and without it Git Bash silently degrades `ln -s` to a plain copy, which would stop tracking the repo. Run the installer from **Git Bash**; it needs `cygpath` (ships with Git for Windows) and `powershell`. On Windows `~/.claude/agents` and `~/.claude/commands` are linked as whole directories rather than file by file, so a `git pull` keeps propagating.
 
 > **Optional — Context7 MCP.** The `architect` agent lists Context7 tools (`mcp__plugin_context7_context7__*`) to query library docs. These only work if [Context7](https://github.com/upstash/context7) is configured as an MCP server in your environment. Without it, those tools silently no-op and the architect falls back to `WebSearch`/`WebFetch` — everything still works, just without live library-doc lookups. See the [subagent MCP docs](https://code.claude.com/docs/en/sub-agents).
 

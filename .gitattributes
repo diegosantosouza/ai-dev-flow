@@ -1,0 +1,4 @@
+# Every tracked file here is parsed line by line by something that rejects a stray CR:
+# a CRLF shebang fails the exec, and a CRLF `---` fails the frontmatter validators.
+# Pin LF regardless of the checkout machine's core.autocrlf.
+* text=auto eol=lf
