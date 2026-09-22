@@ -1,0 +1,234 @@
+# registry.yaml — CURATED map of Housi port-forward targets.
+#
+# This is the source of truth written by hand. `pf.sh` compiles it, together
+# with whatever `pf.sh sync` has discovered, into data/catalog.json — the
+# flat, jq-only artifact the runtime actually reads. Never hand-edit
+# catalog.json; run `pf.sh sync` instead and commit the diff.
+#
+# Keep this in sync with:
+#   - skills/k8s/SKILL.md            (environment table)
+#   - ~/.claude/hooks/housi-k8s-guard.sh (PROD_SIGNALS / DEV_SIGNALS / PROD_NS / HML_NS)
+# A drift between these three is a real risk (see k8s-pf/README.md).
+#
+# Schema notes:
+#   - environments.<env>.namespaces maps a *role* (app, mysql, otel, ...) to the
+#     real namespace for that env. Roles are looked up by targets.*.per_env.*.ns_role.
+#     Namespace name alone never identifies environment — sandbox's cluster also
+#     has `apps`/`consumers`/`cronjobs` namespaces. The (context, namespace) pair
+#     is always the real key.
+#   - targets.*.per_env.<env>.resource is `kind/name` as kubectl expects it
+#     (svc/foo, statefulset/bar).
+#   - secret_ref never holds a secret value, only where to look one up.
+
+version: 1
+
+environments:
+  sandbox:
+    context: gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01
+    cluster: gke-dev-housi-01
+    project: prj-dev-housi-sandbox-01
+    risk: low
+    local_port_base: 20000
+    namespaces:
+      app: sandbox
+      consumers: consumers
+      cronjobs: cronjobs
+      mysql: mysql
+      postgres: postgres
+      redis: redis
+      elasticsearch: elasticsearch
+      otel: opentelemetry
+      monitoring: monitoring
+
+  homolog:
+    context: gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01
+    cluster: gke-prd-housi-01
+    project: prj-prd-housi-sandbox-01
+    risk: high # shares the production cluster — only the namespace differs
+    local_port_base: 30000
+    namespaces:
+      app: apps-hml
+
+  prod:
+    context: gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01
+    cluster: gke-prd-housi-01
+    project: prj-prd-housi-sandbox-01
+    risk: critical
+    local_port_base: 40000
+    namespaces:
+      app: apps
+      consumers: consumers
+      cronjobs: cronjobs
+      elasticsearch: elasticsearch
+      otel: opentelemetry
+      tempo: tempo
+      loki: loki
+      monitoring: monitoring
+
+defaults:
+  app_service_suffix: "-service"
+  app_service_port: 80
+
+# Application services. `severino-v2` is the example from the request; add more
+# app targets the same way. For any service following the standard manifest
+# template (see skills/k8s/SKILL.md rule 3), `resource` defaults to
+# svc/<target>-service and remote_port to 80 — override only when a service
+# deviates (verified live: 42/43 sandbox and 39/42 prod app services use 80).
+targets:
+  severino-v2:
+    kind: app
+    envs: [sandbox, homolog, prod]
+    resource: svc/severino-v2-service
+    remote_port: 80
+    local_port:
+      sandbox: 20080
+      homolog: 30080
+      prod: 40080
+
+  mysql:
+    kind: datastore
+    engine: mysql
+    per_env:
+      sandbox:
+        ns_role: mysql
+        resource: statefulset/housi-dev-mysql
+        service: svc/housi-dev-mysql
+        remote_port: 3306
+        local_port: 23306
+      prod:
+        ns_role: app
+        resource: statefulset/blog-mysql-wordpress
+        service: svc/mysql-wordpress
+        remote_port: 3306
+        local_port: 43306
+        risk: critical
+        secret_ref: { namespace: apps, kind: secret, hint: "check mysql-wordpress deployment env for the secret name" }
+
+  blog-mysql:
+    kind: datastore
+    engine: mysql
+    per_env:
+      prod:
+        ns_role: app
+        resource: statefulset/blog-mysql-wordpress
+        service: svc/blog-mysql-wordpress
+        remote_port: 3306
+        local_port: 43307
+        risk: critical
+        secret_ref: { namespace: apps, kind: secret, hint: "check blog-wordpress deployment env for the secret name" }
+
+  postgres:
+    kind: datastore
+    engine: postgresql
+    per_env:
+      sandbox:
+        ns_role: postgres
+        resource: statefulset/rewards-postgresql
+        service: svc/rewards-postgresql
+        remote_port: 5432
+        local_port: 25432
+
+  redis:
+    kind: datastore
+    engine: redis
+    per_env:
+      sandbox:
+        ns_role: redis
+        resource: statefulset/housi-cache-redis-master
+        service: svc/housi-cache-redis-master
+        remote_port: 6379
+        local_port: 26379
+      prod:
+        ns_role: app
+        resource: svc/redis-service
+        remote_port: 6379
+        local_port: 46379
+        risk: critical
+
+  elasticsearch:
+    kind: datastore
+    engine: elasticsearch
+    per_env:
+      sandbox:
+        ns_role: elasticsearch
+        resource: svc/elasticsearch-discovery
+        ports: { http: 9200, transport: 9300 }
+        local_port: { http: 29200, transport: 29300 }
+      prod:
+        ns_role: elasticsearch # namespace is literally "elasticsearch" in prod too
+        resource: svc/elasticsearch-discovery
+        ports: { transport: 9300 } # http (9200) not exposed on this service in prod
+        local_port: { transport: 49300 }
+        risk: critical
+
+  otel-collector:
+    kind: observability
+    per_env:
+      sandbox:
+        ns_role: otel
+        resource: svc/opentelemetry-collector
+        ports: { otlp-grpc: 4317, otlp-http: 4318, zipkin: 9411, jaeger-grpc: 14250, jaeger-thrift: 14268, jaeger-compact: 6831 }
+        local_port: { otlp-grpc: 24317, otlp-http: 24318, zipkin: 29411, jaeger-grpc: 24250, jaeger-thrift: 24268, jaeger-compact: 26831 }
+      prod:
+        ns_role: otel
+        resource: svc/opentelemetry-collector
+        ports: { otlp-grpc: 4317, otlp-http: 4318, prometheus: 8889 }
+        local_port: { otlp-grpc: 44317, otlp-http: 44318, prometheus: 48889 }
+
+  tempo:
+    kind: observability
+    per_env:
+      prod:
+        ns_role: tempo
+        resource: svc/tempo
+        ports: { http: 3200, otlp-grpc: 4317, otlp-http: 4318, jaeger-thrift: 14268, zipkin: 9411 }
+        local_port: { http: 43200, otlp-grpc: 44320, otlp-http: 44321, jaeger-thrift: 44268, zipkin: 49412 }
+
+  loki:
+    kind: observability
+    per_env:
+      prod:
+        ns_role: loki
+        resource: svc/loki-gateway
+        ports: { http: 80 }
+        local_port: { http: 43100 }
+
+  loki-write:
+    kind: observability
+    per_env:
+      prod:
+        ns_role: loki
+        resource: svc/loki-write
+        ports: { http: 3100 }
+        local_port: { http: 43101 }
+
+  grafana:
+    kind: observability
+    per_env:
+      prod:
+        ns_role: monitoring
+        resource: svc/monitoring-grafana
+        ports: { http: 80 }
+        local_port: { http: 43000 }
+
+  prometheus:
+    kind: observability
+    per_env:
+      prod:
+        ns_role: monitoring
+        resource: svc/monitoring-kube-prometheus-prometheus
+        ports: { http: 9090 }
+        local_port: { http: 49090 }
+      sandbox:
+        ns_role: monitoring
+        resource: svc/kube-state-metrics
+        ports: { http: 8080 }
+        local_port: { http: 28080 }
+
+aliases:
+  severino: severino-v2
+  otel: otel-collector
+  collector: otel-collector
+  pg: postgres
+  postgresql: postgres
+  es: elasticsearch

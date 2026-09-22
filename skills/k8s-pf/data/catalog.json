@@ -1,0 +1,3078 @@
+{
+  "version": 1,
+  "generated_at": "2026-09-21T22:11:07Z",
+  "compiled_from": "registry.yaml",
+  "environments": {
+    "sandbox": {
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "cluster": "gke-dev-housi-01",
+      "project": "prj-dev-housi-sandbox-01",
+      "risk": "low",
+      "local_port_base": 20000,
+      "namespaces": {
+        "app": "sandbox",
+        "consumers": "consumers",
+        "cronjobs": "cronjobs",
+        "mysql": "mysql",
+        "postgres": "postgres",
+        "redis": "redis",
+        "elasticsearch": "elasticsearch",
+        "otel": "opentelemetry",
+        "monitoring": "monitoring"
+      }
+    },
+    "homolog": {
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "cluster": "gke-prd-housi-01",
+      "project": "prj-prd-housi-sandbox-01",
+      "risk": "high",
+      "local_port_base": 30000,
+      "namespaces": {
+        "app": "apps-hml"
+      }
+    },
+    "prod": {
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "cluster": "gke-prd-housi-01",
+      "project": "prj-prd-housi-sandbox-01",
+      "risk": "critical",
+      "local_port_base": 40000,
+      "namespaces": {
+        "app": "apps",
+        "consumers": "consumers",
+        "cronjobs": "cronjobs",
+        "elasticsearch": "elasticsearch",
+        "otel": "opentelemetry",
+        "tempo": "tempo",
+        "loki": "loki",
+        "monitoring": "monitoring"
+      }
+    }
+  },
+  "aliases": {
+    "severino": "severino-v2",
+    "otel": "otel-collector",
+    "collector": "otel-collector",
+    "pg": "postgres",
+    "postgresql": "postgres",
+    "es": "elasticsearch"
+  },
+  "entries": [
+    {
+      "id": "sandbox-severino-v2",
+      "env": "sandbox",
+      "target": "severino-v2",
+      "kind": "app",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/severino-v2-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20080
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "homolog-severino-v2",
+      "env": "homolog",
+      "target": "severino-v2",
+      "kind": "app",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/severino-v2-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30080
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "prod-severino-v2",
+      "env": "prod",
+      "target": "severino-v2",
+      "kind": "app",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/severino-v2-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40080
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "sandbox-mysql",
+      "env": "sandbox",
+      "target": "mysql",
+      "kind": "datastore",
+      "ns_role": "mysql",
+      "namespace": "mysql",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "statefulset/housi-dev-mysql",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 3306,
+          "local": 23306
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:11:02Z"
+    },
+    {
+      "id": "prod-mysql",
+      "env": "prod",
+      "target": "mysql",
+      "kind": "datastore",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "statefulset/blog-mysql-wordpress",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 3306,
+          "local": 43306
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": {
+        "namespace": "apps",
+        "kind": "secret",
+        "hint": "check mysql-wordpress deployment env for the secret name"
+      },
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:10:49Z"
+    },
+    {
+      "id": "prod-blog-mysql",
+      "env": "prod",
+      "target": "blog-mysql",
+      "kind": "datastore",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "statefulset/blog-mysql-wordpress",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 3306,
+          "local": 43307
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": {
+        "namespace": "apps",
+        "kind": "secret",
+        "hint": "check blog-wordpress deployment env for the secret name"
+      },
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:10:49Z"
+    },
+    {
+      "id": "sandbox-postgres",
+      "env": "sandbox",
+      "target": "postgres",
+      "kind": "datastore",
+      "ns_role": "postgres",
+      "namespace": "postgres",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "statefulset/rewards-postgresql",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 5432,
+          "local": 25432
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:11:03Z"
+    },
+    {
+      "id": "sandbox-redis",
+      "env": "sandbox",
+      "target": "redis",
+      "kind": "datastore",
+      "ns_role": "redis",
+      "namespace": "redis",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "statefulset/housi-cache-redis-master",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 6379,
+          "local": 26379
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:11:04Z"
+    },
+    {
+      "id": "prod-redis",
+      "env": "prod",
+      "target": "redis",
+      "kind": "datastore",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/redis-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 6379,
+          "local": 46379
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "sandbox-elasticsearch",
+      "env": "sandbox",
+      "target": "elasticsearch",
+      "kind": "datastore",
+      "ns_role": "elasticsearch",
+      "namespace": "elasticsearch",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/elasticsearch-discovery",
+      "ports": [
+        {
+          "name": "http",
+          "remote": 9200,
+          "local": 29200
+        },
+        {
+          "name": "transport",
+          "remote": 9300,
+          "local": 29300
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:11:05Z"
+    },
+    {
+      "id": "prod-elasticsearch",
+      "env": "prod",
+      "target": "elasticsearch",
+      "kind": "datastore",
+      "ns_role": "elasticsearch",
+      "namespace": "elasticsearch",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/elasticsearch-discovery",
+      "ports": [
+        {
+          "name": "transport",
+          "remote": 9300,
+          "local": 49300
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:10:52Z"
+    },
+    {
+      "id": "sandbox-otel-collector",
+      "env": "sandbox",
+      "target": "otel-collector",
+      "kind": "observability",
+      "ns_role": "otel",
+      "namespace": "opentelemetry",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/opentelemetry-collector",
+      "ports": [
+        {
+          "name": "otlp-grpc",
+          "remote": 4317,
+          "local": 24317
+        },
+        {
+          "name": "otlp-http",
+          "remote": 4318,
+          "local": 24318
+        },
+        {
+          "name": "zipkin",
+          "remote": 9411,
+          "local": 29411
+        },
+        {
+          "name": "jaeger-grpc",
+          "remote": 14250,
+          "local": 24250
+        },
+        {
+          "name": "jaeger-thrift",
+          "remote": 14268,
+          "local": 24268
+        },
+        {
+          "name": "jaeger-compact",
+          "remote": 6831,
+          "local": 26831
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:11:06Z"
+    },
+    {
+      "id": "prod-otel-collector",
+      "env": "prod",
+      "target": "otel-collector",
+      "kind": "observability",
+      "ns_role": "otel",
+      "namespace": "opentelemetry",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/opentelemetry-collector",
+      "ports": [
+        {
+          "name": "otlp-grpc",
+          "remote": 4317,
+          "local": 44317
+        },
+        {
+          "name": "otlp-http",
+          "remote": 4318,
+          "local": 44318
+        },
+        {
+          "name": "prometheus",
+          "remote": 8889,
+          "local": 48889
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:10:53Z"
+    },
+    {
+      "id": "prod-tempo",
+      "env": "prod",
+      "target": "tempo",
+      "kind": "observability",
+      "ns_role": "tempo",
+      "namespace": "tempo",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/tempo",
+      "ports": [
+        {
+          "name": "http",
+          "remote": 3200,
+          "local": 43200
+        },
+        {
+          "name": "otlp-grpc",
+          "remote": 4317,
+          "local": 44320
+        },
+        {
+          "name": "otlp-http",
+          "remote": 4318,
+          "local": 44321
+        },
+        {
+          "name": "jaeger-thrift",
+          "remote": 14268,
+          "local": 44268
+        },
+        {
+          "name": "zipkin",
+          "remote": 9411,
+          "local": 49412
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:10:54Z"
+    },
+    {
+      "id": "prod-loki",
+      "env": "prod",
+      "target": "loki",
+      "kind": "observability",
+      "ns_role": "loki",
+      "namespace": "loki",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/loki-gateway",
+      "ports": [
+        {
+          "name": "http",
+          "remote": 80,
+          "local": 43100
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:10:55Z"
+    },
+    {
+      "id": "prod-loki-write",
+      "env": "prod",
+      "target": "loki-write",
+      "kind": "observability",
+      "ns_role": "loki",
+      "namespace": "loki",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/loki-write",
+      "ports": [
+        {
+          "name": "http",
+          "remote": 3100,
+          "local": 43101
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:10:55Z"
+    },
+    {
+      "id": "prod-grafana",
+      "env": "prod",
+      "target": "grafana",
+      "kind": "observability",
+      "ns_role": "monitoring",
+      "namespace": "monitoring",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/monitoring-grafana",
+      "ports": [
+        {
+          "name": "http",
+          "remote": 80,
+          "local": 43000
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:10:56Z"
+    },
+    {
+      "id": "prod-prometheus",
+      "env": "prod",
+      "target": "prometheus",
+      "kind": "observability",
+      "ns_role": "monitoring",
+      "namespace": "monitoring",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/monitoring-kube-prometheus-prometheus",
+      "ports": [
+        {
+          "name": "http",
+          "remote": 9090,
+          "local": 49090
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:10:56Z"
+    },
+    {
+      "id": "sandbox-prometheus",
+      "env": "sandbox",
+      "target": "prometheus",
+      "kind": "observability",
+      "ns_role": "monitoring",
+      "namespace": "monitoring",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/kube-state-metrics",
+      "ports": [
+        {
+          "name": "http",
+          "remote": 8080,
+          "local": 28080
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "curated",
+      "discovered_at": null,
+      "verified_at": "2026-09-21T22:11:07Z"
+    },
+    {
+      "id": "homolog-appspace",
+      "env": "homolog",
+      "target": "appspace",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/appspace-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30249
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-backoffice",
+      "env": "homolog",
+      "target": "backoffice",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/backoffice-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30470
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-bazzar",
+      "env": "homolog",
+      "target": "bazzar",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/bazzar-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30843
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-booking",
+      "env": "homolog",
+      "target": "booking",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/booking-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30701
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-core-hcondo",
+      "env": "homolog",
+      "target": "core-hcondo",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/core-hcondo-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30471
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-correios",
+      "env": "homolog",
+      "target": "correios",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/correios-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30233
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-davinci",
+      "env": "homolog",
+      "target": "davinci",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/davinci-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30071
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-gandalf-v3",
+      "env": "homolog",
+      "target": "gandalf-v3",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/gandalf-v3-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30647
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-grampo",
+      "env": "homolog",
+      "target": "grampo",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/grampo-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30234
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-hcondo",
+      "env": "homolog",
+      "target": "hcondo",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/hcondo-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30598
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-hdrive",
+      "env": "homolog",
+      "target": "hdrive",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/hdrive-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30325
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-hdrivecore",
+      "env": "homolog",
+      "target": "hdrivecore",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/hdrivecore-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30220
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-hub-investidor-api",
+      "env": "homolog",
+      "target": "hub-investidor-api",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/hub-investidor-api-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30096
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-keycloak",
+      "env": "homolog",
+      "target": "keycloak",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/keycloak-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30353
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-loot",
+      "env": "homolog",
+      "target": "loot",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/loot-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30332
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-machine-chan",
+      "env": "homolog",
+      "target": "machine-chan",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/machine-chan-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30419
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-patinhas",
+      "env": "homolog",
+      "target": "patinhas",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/patinhas-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30481
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-procon",
+      "env": "homolog",
+      "target": "procon",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/procon-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30609
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-receita-federal-v2",
+      "env": "homolog",
+      "target": "receita-federal-v2",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/receita-federal-v2-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30272
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-rewards",
+      "env": "homolog",
+      "target": "rewards",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/rewards-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30314
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-rosie",
+      "env": "homolog",
+      "target": "rosie",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/rosie-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30767
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-rumple",
+      "env": "homolog",
+      "target": "rumple",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/rumple-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30425
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-severino",
+      "env": "homolog",
+      "target": "severino",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/severino-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30784
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-shop-totem",
+      "env": "homolog",
+      "target": "shop-totem",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/shop-totem-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30032
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-site-nextjs",
+      "env": "homolog",
+      "target": "site-nextjs",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/site-nextjs-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30484
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-snape",
+      "env": "homolog",
+      "target": "snape",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/snape-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30678
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-splithub",
+      "env": "homolog",
+      "target": "splithub",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/splithub-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30535
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-splitr",
+      "env": "homolog",
+      "target": "splitr",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/splitr-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30382
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-spock",
+      "env": "homolog",
+      "target": "spock",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/spock-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30873
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-ted",
+      "env": "homolog",
+      "target": "ted",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/ted-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30726
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:46Z",
+      "verified_at": "2026-09-21T22:10:46Z"
+    },
+    {
+      "id": "homolog-victor",
+      "env": "homolog",
+      "target": "victor",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/victor-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30203
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:47Z",
+      "verified_at": "2026-09-21T22:10:47Z"
+    },
+    {
+      "id": "homolog-wormhole",
+      "env": "homolog",
+      "target": "wormhole",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/wormhole-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30216
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:47Z",
+      "verified_at": "2026-09-21T22:10:47Z"
+    },
+    {
+      "id": "homolog-yoda",
+      "env": "homolog",
+      "target": "yoda",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps-hml",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/yoda-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 30184
+        }
+      ],
+      "risk": "high",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:47Z",
+      "verified_at": "2026-09-21T22:10:47Z"
+    },
+    {
+      "id": "prod-appspace",
+      "env": "prod",
+      "target": "appspace",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/appspace-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40249
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-backoffice",
+      "env": "prod",
+      "target": "backoffice",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/backoffice-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40470
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-bazzar",
+      "env": "prod",
+      "target": "bazzar",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/bazzar-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40843
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-blog-mysql-wordpress",
+      "env": "prod",
+      "target": "blog-mysql-wordpress",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/blog-mysql-wordpress",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 3306,
+          "local": 40572
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-blog-wordpress",
+      "env": "prod",
+      "target": "blog-wordpress",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/blog-wordpress",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40278
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-booking",
+      "env": "prod",
+      "target": "booking",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/booking-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40701
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-caixa-economica",
+      "env": "prod",
+      "target": "caixa-economica",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/caixa-economica-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40452
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-core-hcondo",
+      "env": "prod",
+      "target": "core-hcondo",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/core-hcondo-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40471
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-correios",
+      "env": "prod",
+      "target": "correios",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/correios-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40233
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-davinci",
+      "env": "prod",
+      "target": "davinci",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/davinci-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40071
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-eagle",
+      "env": "prod",
+      "target": "eagle",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/eagle-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40686
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-gandalf-v3",
+      "env": "prod",
+      "target": "gandalf-v3",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/gandalf-v3-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40647
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-grampo",
+      "env": "prod",
+      "target": "grampo",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/grampo-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40234
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-hcondo",
+      "env": "prod",
+      "target": "hcondo",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/hcondo-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40598
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-hdrive",
+      "env": "prod",
+      "target": "hdrive",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/hdrive-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40325
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-hdrivecore",
+      "env": "prod",
+      "target": "hdrivecore",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/hdrivecore-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40220
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-hub-investidor-api",
+      "env": "prod",
+      "target": "hub-investidor-api",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/hub-investidor-api-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40096
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-keycloak",
+      "env": "prod",
+      "target": "keycloak",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/keycloak-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40353
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-loot",
+      "env": "prod",
+      "target": "loot",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/loot-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40332
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-machine-chan",
+      "env": "prod",
+      "target": "machine-chan",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/machine-chan-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40419
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-mysql-wordpress",
+      "env": "prod",
+      "target": "mysql-wordpress",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/mysql-wordpress",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 3306,
+          "local": 40491
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-patinhas",
+      "env": "prod",
+      "target": "patinhas",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/patinhas-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40481
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-procon",
+      "env": "prod",
+      "target": "procon",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/procon-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40609
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-receita-federal-v2",
+      "env": "prod",
+      "target": "receita-federal-v2",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/receita-federal-v2-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40272
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-rewards",
+      "env": "prod",
+      "target": "rewards",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/rewards-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40314
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-rosie",
+      "env": "prod",
+      "target": "rosie",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/rosie-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40767
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-rumple",
+      "env": "prod",
+      "target": "rumple",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/rumple-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40425
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-severino",
+      "env": "prod",
+      "target": "severino",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/severino-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40784
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-shop-totem",
+      "env": "prod",
+      "target": "shop-totem",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/shop-totem-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40032
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-site-nextjs",
+      "env": "prod",
+      "target": "site-nextjs",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/site-nextjs-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40484
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-snape",
+      "env": "prod",
+      "target": "snape",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/snape-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40678
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-splithub",
+      "env": "prod",
+      "target": "splithub",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/splithub-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40535
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-splitr",
+      "env": "prod",
+      "target": "splitr",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/splitr-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40382
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:48Z",
+      "verified_at": "2026-09-21T22:10:48Z"
+    },
+    {
+      "id": "prod-spock",
+      "env": "prod",
+      "target": "spock",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/spock-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40873
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:49Z",
+      "verified_at": "2026-09-21T22:10:49Z"
+    },
+    {
+      "id": "prod-ted",
+      "env": "prod",
+      "target": "ted",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/ted-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40726
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:49Z",
+      "verified_at": "2026-09-21T22:10:49Z"
+    },
+    {
+      "id": "prod-thumbor-gcs",
+      "env": "prod",
+      "target": "thumbor-gcs",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/thumbor-gcs-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40713
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:49Z",
+      "verified_at": "2026-09-21T22:10:49Z"
+    },
+    {
+      "id": "prod-thumbor",
+      "env": "prod",
+      "target": "thumbor",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/thumbor-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40690
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:49Z",
+      "verified_at": "2026-09-21T22:10:49Z"
+    },
+    {
+      "id": "prod-victor",
+      "env": "prod",
+      "target": "victor",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/victor-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40203
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:49Z",
+      "verified_at": "2026-09-21T22:10:49Z"
+    },
+    {
+      "id": "prod-wormhole",
+      "env": "prod",
+      "target": "wormhole",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/wormhole-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40216
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:49Z",
+      "verified_at": "2026-09-21T22:10:49Z"
+    },
+    {
+      "id": "prod-yoda",
+      "env": "prod",
+      "target": "yoda",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "apps",
+      "context": "gke_prj-prd-housi-sandbox-01_us-east1_gke-prd-housi-01",
+      "resource": "svc/yoda-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 40184
+        }
+      ],
+      "risk": "critical",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:49Z",
+      "verified_at": "2026-09-21T22:10:49Z"
+    },
+    {
+      "id": "sandbox-appspace",
+      "env": "sandbox",
+      "target": "appspace",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/appspace-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20249
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-backoffice",
+      "env": "sandbox",
+      "target": "backoffice",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/backoffice-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20470
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-bazzar",
+      "env": "sandbox",
+      "target": "bazzar",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/bazzar-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20843
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-booking",
+      "env": "sandbox",
+      "target": "booking",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/booking-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20701
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-caixa-economica",
+      "env": "sandbox",
+      "target": "caixa-economica",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/caixa-economica-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20452
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-core-hcondo",
+      "env": "sandbox",
+      "target": "core-hcondo",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/core-hcondo-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20471
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-correios",
+      "env": "sandbox",
+      "target": "correios",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/correios-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20233
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-davinci",
+      "env": "sandbox",
+      "target": "davinci",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/davinci-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20071
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-documentation",
+      "env": "sandbox",
+      "target": "documentation",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/documentation-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20608
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-eagle",
+      "env": "sandbox",
+      "target": "eagle",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/eagle-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20686
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-gandalf-v3",
+      "env": "sandbox",
+      "target": "gandalf-v3",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/gandalf-v3-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20647
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-grampo",
+      "env": "sandbox",
+      "target": "grampo",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/grampo-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20234
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-hcondo",
+      "env": "sandbox",
+      "target": "hcondo",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/hcondo-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20598
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-hdrive",
+      "env": "sandbox",
+      "target": "hdrive",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/hdrive-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20325
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-hdrivecore",
+      "env": "sandbox",
+      "target": "hdrivecore",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/hdrivecore-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20220
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-housi-place",
+      "env": "sandbox",
+      "target": "housi-place",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/housi-place-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20007
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-housi-platform-api",
+      "env": "sandbox",
+      "target": "housi-platform-api",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/housi-platform-api-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20753
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-housi-platform-web",
+      "env": "sandbox",
+      "target": "housi-platform-web",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/housi-platform-web-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20656
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-hub-investidor-api",
+      "env": "sandbox",
+      "target": "hub-investidor-api",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/hub-investidor-api-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20096
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-keycloak",
+      "env": "sandbox",
+      "target": "keycloak",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/keycloak-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20353
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-loot",
+      "env": "sandbox",
+      "target": "loot",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/loot-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20332
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-machine-chan",
+      "env": "sandbox",
+      "target": "machine-chan",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/machine-chan-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20419
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-newspaper",
+      "env": "sandbox",
+      "target": "newspaper",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/newspaper-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20544
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-patinhas",
+      "env": "sandbox",
+      "target": "patinhas",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/patinhas-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20481
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-procon",
+      "env": "sandbox",
+      "target": "procon",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/procon-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20609
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-receita-federal-v2",
+      "env": "sandbox",
+      "target": "receita-federal-v2",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/receita-federal-v2-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20272
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-rewards",
+      "env": "sandbox",
+      "target": "rewards",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/rewards-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20314
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-rosie",
+      "env": "sandbox",
+      "target": "rosie",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/rosie-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20767
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-rumple",
+      "env": "sandbox",
+      "target": "rumple",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/rumple-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20425
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-severino",
+      "env": "sandbox",
+      "target": "severino",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/severino-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20784
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-shop-totem",
+      "env": "sandbox",
+      "target": "shop-totem",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/shop-totem-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20032
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-site-nextjs",
+      "env": "sandbox",
+      "target": "site-nextjs",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/site-nextjs-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20484
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:58Z",
+      "verified_at": "2026-09-21T22:10:58Z"
+    },
+    {
+      "id": "sandbox-snape",
+      "env": "sandbox",
+      "target": "snape",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/snape-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20678
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:59Z",
+      "verified_at": "2026-09-21T22:10:59Z"
+    },
+    {
+      "id": "sandbox-splithub",
+      "env": "sandbox",
+      "target": "splithub",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/splithub-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20535
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:59Z",
+      "verified_at": "2026-09-21T22:10:59Z"
+    },
+    {
+      "id": "sandbox-splitr",
+      "env": "sandbox",
+      "target": "splitr",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/splitr-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20382
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:59Z",
+      "verified_at": "2026-09-21T22:10:59Z"
+    },
+    {
+      "id": "sandbox-spock",
+      "env": "sandbox",
+      "target": "spock",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/spock-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20873
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:59Z",
+      "verified_at": "2026-09-21T22:10:59Z"
+    },
+    {
+      "id": "sandbox-ted",
+      "env": "sandbox",
+      "target": "ted",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/ted-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20726
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:59Z",
+      "verified_at": "2026-09-21T22:10:59Z"
+    },
+    {
+      "id": "sandbox-thumbor-gcs",
+      "env": "sandbox",
+      "target": "thumbor-gcs",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/thumbor-gcs-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20713
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:59Z",
+      "verified_at": "2026-09-21T22:10:59Z"
+    },
+    {
+      "id": "sandbox-thumbor",
+      "env": "sandbox",
+      "target": "thumbor",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/thumbor-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20690
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:59Z",
+      "verified_at": "2026-09-21T22:10:59Z"
+    },
+    {
+      "id": "sandbox-victor",
+      "env": "sandbox",
+      "target": "victor",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/victor-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20203
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:59Z",
+      "verified_at": "2026-09-21T22:10:59Z"
+    },
+    {
+      "id": "sandbox-wormhole",
+      "env": "sandbox",
+      "target": "wormhole",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/wormhole-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 80,
+          "local": 20216
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:59Z",
+      "verified_at": "2026-09-21T22:10:59Z"
+    },
+    {
+      "id": "sandbox-yoda",
+      "env": "sandbox",
+      "target": "yoda",
+      "kind": "discovered",
+      "ns_role": "app",
+      "namespace": "sandbox",
+      "context": "gke_prj-dev-housi-sandbox-01_us-east1_gke-dev-housi-01",
+      "resource": "svc/yoda-service",
+      "ports": [
+        {
+          "name": "default",
+          "remote": 3000,
+          "local": 20184
+        }
+      ],
+      "risk": "low",
+      "secret_ref": null,
+      "source": "discovered",
+      "discovered_at": "2026-09-21T22:10:59Z",
+      "verified_at": "2026-09-21T22:10:59Z"
+    }
+  ]
+}
