@@ -53,6 +53,7 @@ The key insight: **verbose work happens in subagents** (research, tests, reviews
 | `committer` | haiku | low | Creates properly formatted git commits |
 | `observability-analyst` | sonnet | high | Read-only. Correlates Grafana logs/metrics/traces with local code for root-cause analysis and instrumentation-gap audits. Requires the Grafana MCP server. |
 | `observability-builder` | sonnet | high | Writes local files only. Generates Grafana dashboard panels and alert rules under `deploy/grafana/`, never writing to Grafana directly. |
+| `security-auditor` | sonnet | high | Read-only. Threat-models and audits a codebase, commit range, or PR, verifying each candidate finding adversarially before reporting it. |
 
 Agents with persistent memory (`researcher`, `architect`, `code-reviewer`, `observability-analyst`) accumulate knowledge across sessions, getting better at understanding your codebase over time.
 
@@ -101,6 +102,11 @@ Skills are reusable playbooks installed globally at `~/.claude/skills/`. Unlike 
 | `/obs-panel <service-name> <what to visualize>` | Delegates to `observability-builder` — generates a new dashboard panel as a file under `deploy/grafana/dashboards/`. |
 | `/obs-alert <service-name> <condition>` | Delegates to `observability-builder` — generates a new alert rule as a file under `deploy/grafana/alerts/`, with a threshold derived from real metric history. Direct invocation only (`disable-model-invocation: true`). |
 | `/obs-apply <file...> [--apply]` | Applies dashboard/alert files to a real Grafana instance. Dry-run by default. Direct invocation only. |
+| `/security-audit <service \| path \| commit range \| PR#>` | Delegates to `security-auditor` — threat-models and audits the given scope, verifying each finding adversarially before reporting it. |
+| `/verification-planning [feature]` | Builds an evidence path (what needs proof and how — tests, live calls, traces/metrics) before implementing non-trivial work. Used as part of `/plan`. |
+| `/reflect [focus]` | Reviews recent sessions and the current setup, then recommends the smallest useful fix — a rule, a skill, an agent, or no change. Direct invocation only. |
+| `/improve-codebase-architecture` | Finds "deepening" opportunities — shallow modules that would benefit from a cleaner interface/implementation split — informed by `CONTEXT.md` and ADRs. |
+| `/humanizer` | Rewrites AI-sounding prose (staged openers, forced triads, dash-heavy sentences, stock AI words) to read naturally, in English or PT-BR. Callable in embedded mode by other skills (e.g. `housi-ship`'s PR body). |
 
 See individual READMEs for full usage:
 - [`skills/otel-bootstrap/README.md`](skills/otel-bootstrap/README.md)
@@ -246,8 +252,15 @@ User: /commit
     ├── obs-gap/                # /obs-gap <service-name> — forks observability-analyst
     ├── obs-panel/              # /obs-panel <service-name> <what> — forks observability-builder
     ├── obs-alert/              # /obs-alert <service-name> <condition> — forks observability-builder
-    └── obs-apply/              # /obs-apply <file...> [--apply] — runs in main session
-        └── scripts/            # apply.sh (jq + optional yq)
+    ├── obs-apply/              # /obs-apply <file...> [--apply] — runs in main session
+    │   └── scripts/            # apply.sh (jq + optional yq)
+    ├── security-audit/         # /security-audit <scope> — forks security-auditor
+    │   ├── scripts/            # security-surface.sh, test-security-surface.sh
+    │   └── reference/          # security-checklist.md, ecosystem-checks.md
+    ├── verification-planning/  # evidence-path planning, used by /plan
+    ├── reflect/                # /reflect [focus] — direct invocation only
+    ├── improve-codebase-architecture/  # finds shallow-module refactor candidates
+    └── humanizer/              # rewrites AI-sounding prose (MIT, blader/humanizer)
 ```
 
 Each agent is a Markdown file with YAML frontmatter that defines its model, tools, permissions, and system prompt. Commands are thin wrappers that delegate to the right agent.
@@ -259,6 +272,24 @@ Each agent is a Markdown file with YAML frontmatter that defines its model, tool
 3. **Test after every phase.** Not at the end — after each phase. Failures are caught early and stay small.
 4. **Keep context lean.** Delegate verbose work to subagents. Quality of AI output degrades with context noise.
 5. **Never brute-force.** The `architect` agent must be consulted before implementing non-trivial features. There's usually an established pattern or library for the problem.
+
+## Credits
+
+A few skills in this repo adapt ideas or content from other open-source work, always with
+attribution kept in the skill file itself:
+
+- `security-audit`'s adversarial-verification model is adapted from
+  [akitaonrails/my-skills](https://github.com/akitaonrails/my-skills), which credits
+  [cloudflare/security-audit-skill](https://github.com/cloudflare/security-audit-skill) (MIT).
+- `verification-planning` and `reflect` are original text written for this project, informed
+  by the methodology of the corresponding skills in akitaonrails/my-skills.
+- `humanizer` is a direct copy (with attribution) of
+  [blader/humanizer](https://github.com/blader/humanizer) (MIT).
+- `improve-codebase-architecture` is copied from the skill of the same name in
+  [mattpocock/skills](https://github.com/mattpocock/skills) (MIT) @ commit `7afa86d`. Four of
+  its six files are byte-identical (verified via `git hash-object`); `SKILL.md` has two
+  relative links fixed for its new location and is otherwise unchanged. See
+  `skills/improve-codebase-architecture/LICENSE` for the full provenance note.
 
 ## License
 

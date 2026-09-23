@@ -133,6 +133,26 @@ Exit 0 = aplica limpo. Exit 1 = lista os caminhos em conflito — nesse caso, ch
 O que fazer?" com opções `Resolver agora (cherry-pick manual)` / `Pular esse ambiente` / `Usar
 outra base`.
 
+### Passo 3.5 — Checagem de interação (ambientes acima do primeiro)
+
+Só se aplica ao 2º ambiente em diante da ordem escolhida (ex. ao abrir o PR de produção depois
+do de homolog já ter sido mergeado) — o risco aqui não é o cherry-pick em si (isso o dry-run do
+Passo 3 já cobre), é o commit **depender de algo que só existe na base de um ambiente anterior**
+e ainda não chegou à base do ambiente atual.
+
+1. `git log <base-do-ambiente-atual>..<base-do-ambiente-anterior> --oneline` limitado, quando
+   possível, aos arquivos que o commit sendo levado toca (`-- <paths do commit>`).
+2. Se a lista vier vazia, siga em frente sem alarde — não há divergência relevante entre as bases.
+3. Se vier não vazia, resuma para o usuário e cheque rapidamente, sem se aprofundar:
+   - o commit usa um helper/tipo/migration que só entrou na base anterior?
+   - algum default/config composto muda de comportamento entre as duas bases?
+   - o teste que valida o commit só passa por causa de um mock/helper que veio de outro PR
+     ainda não presente na base atual?
+4. Isso **não bloqueia sozinho** — leve o achado (ou "nenhuma divergência relevante") para o
+   resumo de confirmação do Passo 4, e deixe o usuário decidir se segue, ajusta o cherry-pick, ou
+   pede uma auditoria mais profunda com `/security-audit` (se o achado for de segurança) antes de
+   prosseguir.
+
 ### Passo 4 — Branch, cherry-pick, testes, push (por ambiente, na ordem escolhida)
 
 1. Nome da branch conforme o `branch_style` (Passo 0): reaproveitar a mesma em todos os
@@ -150,6 +170,10 @@ outra base`.
    sido apagada), refaça o push antes deste passo se o branch não existir mais no remoto.
 
 ### Passo 5 — Abrir o PR
+
+Antes de chamar `gh pr create`, redija o corpo do PR e passe o texto livre (não os links, o
+template estrutural nem trechos de código) pela skill `humanizer` em modo embedded — só para
+tirar "cara de IA" do resumo em português, preservando fatos e formato.
 
 `gh pr create --base <branch-base-do-ambiente> --head <branch>` (pede confirmação). Título e
 corpo em português; se `pr_template` existir, preencher as seções dele (não inventar um formato

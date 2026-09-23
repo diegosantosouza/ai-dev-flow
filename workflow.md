@@ -92,7 +92,11 @@ O CLAUDE.md é uma **especificação viva** — atualize-o conforme o projeto ev
 
 - Passos exatos de implementação
 - Arquivos afetados
-- Estratégia de verificação (testes)
+- Evidence path (skill `verification-planning`): como vamos provar que funcionou — nem
+  sempre é só teste unitário. Para mudanças em microserviços multi-ambiente, a evidência mais
+  forte costuma ser uma chamada real em sandbox/homolog, uma trace/métrica (`/obs-rca`,
+  `/obs-gap`) ou o estado de um pod (`/k8s`). Proporcional ao risco: mudança mecânica pequena
+  usa só a suíte de testes do projeto.
 - Riscos e edge cases
 
 **Regras**:
@@ -145,6 +149,7 @@ Cada um tem seu próprio system prompt, ferramentas permitidas e modelo.
 | `committer` | haiku | baixo | Bash + Read (bypassPermissions) | Não | Criar commits descritivos |
 | `observability-analyst` | sonnet | alto | Read-only + MCP Grafana (`--disable-write`) | Sim (user) | Correlacionar logs/métricas/traces do Grafana com o código, para RCA e auditoria de gaps de instrumentação |
 | `observability-builder` | sonnet | alto | Read + Write (local) + MCP Grafana read-only | Não | Gerar painéis e alertas como arquivos versionados em `deploy/grafana/` — nunca escreve direto no Grafana |
+| `security-auditor` | sonnet | alto | Read-only | Sim (user) | Threat-model e auditoria de segurança de um escopo (serviço/path/range/PR), com verificação adversarial por achado |
 
 > **Sessão principal usa `opusplan`**: opus durante `/plan` (decisões importam), sonnet durante `/implement` (execução).
 >

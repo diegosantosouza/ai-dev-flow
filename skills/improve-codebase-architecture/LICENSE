@@ -1,0 +1,39 @@
+MIT License
+
+Copyright (c) 2026 Matt Pocock
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+
+---
+
+LANGUAGE.md, DEEPENING.md, and INTERFACE-DESIGN.md in this directory are copied byte-identical
+(verified via `git hash-object`) from skills/engineering/improve-codebase-architecture/ in
+https://github.com/mattpocock/skills @ commit 7afa86d3a5dd96edde06ffa014e16c64e733681e.
+
+CONTEXT-FORMAT.md and ADR-FORMAT.md are copied byte-identical from
+skills/engineering/grill-with-docs/ in the same repo and commit — their content is unchanged,
+only their location moved (from a sibling `grill-with-docs/` folder into this one).
+
+SKILL.md is copied from the same commit with exactly two edits: the two relative links to the
+files above were updated from `../grill-with-docs/CONTEXT-FORMAT.md` and
+`../grill-with-docs/ADR-FORMAT.md` to same-directory paths (`CONTEXT-FORMAT.md`,
+`ADR-FORMAT.md`), since this port flattens both source skills into one folder. No other line
+was changed — it still references Claude Code's built-in `Explore` subagent type as upstream
+does, left as-is intentionally rather than remapped to this repo's own `researcher` agent, to
+keep the port as close to verbatim as the link fix allows.
