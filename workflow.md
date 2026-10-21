@@ -371,6 +371,84 @@ Deploy → Usuários reais → Casos não previstos → Fix/Evolve → Deploy �
 
 ---
 
+## 9. Esteira de Missões: `/pipe`
+
+Esteira de missões feita só de skills e agents: sem runtime e sem dependências.
+Entrada: `/pipe <CHAVE-JIRA | objetivo>`. A cadeia é:
+
+```
+pipe → pipe-spec → pipe-build → pipe-verify
+```
+
+Cada skill é invocada pela ferramenta Skill, na sessão principal (só ela tem
+AskUserQuestion e plan mode). Cada etapa termina perguntando o próximo passo: a
+recomendação vem primeiro e continua a cadeia; "Parar aqui" para, e
+`/pipe resume <id>` retoma. A esteira nunca faz push, PR ou merge; a entrega só
+sugere `/housi-ship <CHAVE>`.
+
+### Níveis
+
+Na dúvida, suba um nível.
+
+| Nível | Quando | Caminho | Gates |
+| --- | --- | --- | --- |
+| **Pequeno** | Mudança local descritível em 1 frase, alvo concreto, 1 repo, sem palavra de risco ou pesquisa | Plan mode → 1 slice → build → verify | nível, plano, próximo, build por slice, entrega |
+| **Médio** | Alvo concreto, até ~8 tarefas, 1 repo; ou bug com sintoma e alvo (`kind: bug`) | Skill `plan` (architect) → plan mode → 1 slice → build → verify com reviewer | igual ao Pequeno |
+| **Complexo** | Palavra de risco ou de pesquisa, 3+ partes independentes, mais de 1 repo, épico, ou texto curto sem alvo | Descoberta → perguntas → spec → design + plano (N slices) → build → verify → integração | nível, uma por pergunta aberta, spec, design + plano (2 perguntas), próximo, build por slice, entrega |
+
+- **Risco** (`risk: true`): autenticação, pagamento, LGPD, dados pessoais, segredo, produção, migração, banco, deploy, infra e afins. Nesse caso, o design (Complexo) e o verify também acionam o `security-auditor`.
+- **Pesquisa:** "só pesquisar" para no discovery (`next: stop-after-discovery`).
+
+### Estado
+
+Cada missão fica em `~/.pipe/missions/<id>/`:
+
+```
+~/.pipe/
+├── asks.jsonl                  # respostas de AskUserQuestion/ExitPlanMode (auditoria)
+└── missions/<id>/
+    ├── MISSION.md              # frontmatter + tabela de slices
+    ├── INTAKE.md               # ticket ou objetivo, literal
+    ├── DECISIONS.md            # Decididas / Em aberto (Q<n>)
+    ├── ledger.md               # um evento por linha, só append
+    ├── SPEC.md                 # DISCOVERY, DESIGN e PLAN só no Complexo
+    ├── slices/<s>/SPEC.md
+    ├── pins/<arquivo>.sha256
+    ├── handoffs/NN-<papel>.brief.md e .report.md
+    └── proof/<s>/              # qa-*.md, verdict.md, review.md, security.md
+```
+
+- **Ledger:** cada linha é acrescentada com `printf ... >>`. Nunca se edita com Write ou Edit. Um `gate.answer` exige um `gate.ask` anterior com o mesmo hash.
+- **Pin:** depois de aprovar, `shasum -a 256 <arquivo>` grava o hash em `pins/`. Antes de cada despacho, `shasum -a 256 -c --strict pins/*.sha256` precisa passar.
+- **Handoff:** o brief é escrito antes de cada despacho. A última mensagem do agent vira o report, sem reescrita. Ela termina com o bloco:
+
+```
+STATUS: DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED
+BLOCKER: none | capability:<o quê> | content:Q<n>
+```
+
+`capability:` significa que o sandbox bloqueou algo (o humano roda fora). `content:Q<n>` significa que falta uma decisão.
+
+### Pré-requisitos (uma vez, pelo humano)
+
+1. `~/.pipe` em `permissions.additionalDirectories` de `~/.claude/settings.json`.
+2. Em cada repo onde há build, em `.claude/settings.local.json`: `sandbox.enabled: true` com os domínios dos registries em `sandbox.network.allowedDomains`, e `permissions.ask` com `Agent(pipe-builder)` e `Bash(dangerouslyDisableSandbox:true)`.
+
+A skill `pipe` confere isso no preflight e para se faltar algo.
+
+### Limites
+
+- Skill é instrução, não enforcement.
+- O harness garante: AskUserQuestion e plan mode só na sessão principal; isolamento de worktree do builder; sandbox; regras `ask` e `deny`.
+- Vira detecção: a resposta do gate é copiada pelo modelo para o ledger. O hook do `/pipe` grava cada resposta em `~/.pipe/asks.jsonl` para auditoria.
+- Validator e reviewer usam `/usr/bin/git` e `/usr/bin/grep` por causa do hook global que trunca a saída.
+
+> **Instalação:** rodar `install.sh` religa os agents `pipe-*` em `~/.claude/agents`, que hoje apontam para outro repo. Não rode com um run de sessão do runtime antigo ativo.
+
+### Lint
+
+`scripts/validate-pipe.sh [repo-raiz]` checa S1 a S6: frontmatter permitido, flags de invocação, resíduos do motor antigo, `maxTurns` e limites de ferramenta, `pipe-*` citados que existem, tamanho das skills (16000 bytes), e `/usr/bin/git`/`/usr/bin/grep` no validator e no reviewer. Roda no pre-commit quando um agent, uma skill ou o próprio script `pipe` é alterado.
+
 ## Fontes
 
 - [Akita: Do Zero à Pós-Produção em 1 Semana](https://akitaonrails.com/2026/02/20/do-zero-a-pos-producao-em-1-semana-como-usar-ia-em-projetos-de-verdade-bastidores-do-the-m-akita-chronicles/)
