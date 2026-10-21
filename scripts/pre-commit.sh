@@ -8,6 +8,10 @@ if git diff --cached --name-only | grep -q "^agents/.*\.md$"; then
   "$REPO_ROOT/scripts/validate-agents.sh" "$REPO_ROOT/agents"
 fi
 
+if git diff --cached --name-only | grep -qE "^(agents/pipe-.*\.md|skills/pipe[^/]*/SKILL\.md|scripts/validate-pipe\.sh)$"; then
+  "$REPO_ROOT/scripts/validate-pipe.sh" "$REPO_ROOT"
+fi
+
 if git diff --cached --name-only | grep -q "^skills/.*/SKILL\.md$"; then
   "$REPO_ROOT/scripts/validate-skills.sh" "$REPO_ROOT/skills" "$REPO_ROOT/agents"
 fi
