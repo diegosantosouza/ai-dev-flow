@@ -216,6 +216,7 @@ Without a git repo (for example, a folder with several repos), only intake and s
 - **S5** each pipe skill is at most 16000 bytes
 - **S6** builder, validator and reviewer use `/usr/bin/git` and `/usr/bin/grep` (the global rtk hook rewrites the short git commands, and the worktree guard refuses the rewritten form)
 - **S7** no bare `cd <path>` in the skills (the Bash tool keeps its directory, and `isolation: worktree` fails when the session is outside the repo)
+- **S8** no bare git command in the skills either (the orchestrator runs in the main session, where the same hook truncates the output)
 
 It runs from `scripts/pre-commit.sh` when a `pipe` agent, skill, or the script itself is staged.
 

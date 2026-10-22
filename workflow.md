@@ -447,7 +447,7 @@ A skill `pipe` confere isso no preflight e para se faltar algo.
 
 ### Lint
 
-`scripts/validate-pipe.sh [repo-raiz]` checa S1 a S7: frontmatter permitido, flags de invocação, resíduos do motor antigo, `maxTurns` e limites de ferramenta, `pipe-*` citados que existem, tamanho das skills (16000 bytes), `/usr/bin/git`/`/usr/bin/grep` no builder, no validator e no reviewer (o hook global reescreve o git curto e a trava do worktree recusa a forma reescrita), e nenhum `cd` solto nas skills (o Bash mantém o diretório, e o `isolation: worktree` falha fora do repo). Roda no pre-commit quando um agent, uma skill ou o próprio script `pipe` é alterado.
+`scripts/validate-pipe.sh [repo-raiz]` checa S1 a S8 (o S8 exige `/usr/bin/git` também nas skills, porque o orquestrador roda na sessão principal, onde o mesmo hook trunca a saída): frontmatter permitido, flags de invocação, resíduos do motor antigo, `maxTurns` e limites de ferramenta, `pipe-*` citados que existem, tamanho das skills (16000 bytes), `/usr/bin/git`/`/usr/bin/grep` no builder, no validator e no reviewer (o hook global reescreve o git curto e a trava do worktree recusa a forma reescrita), e nenhum `cd` solto nas skills (o Bash mantém o diretório, e o `isolation: worktree` falha fora do repo). Roda no pre-commit quando um agent, uma skill ou o próprio script `pipe` é alterado.
 
 ## Fontes
 

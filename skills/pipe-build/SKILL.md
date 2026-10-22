@@ -14,12 +14,12 @@ Missão: **$ARGUMENTS** (pasta `~/.pipe/missions/$ARGUMENTS/`).
 ## 1. Pré-condições (todas, nesta ordem)
 
 1. **Pins:** `( cd ~/.pipe/missions/$ARGUMENTS && shasum -a 256 -c --strict pins/*.sha256 )`. Se falhar, **não despache**: pergunte (`[pipe <id> gate pin]`) refazer o gate do artefato que mudou (volta à `pipe-spec`) ou parar.
-2. **Repo e sandbox:** a sessão está dentro do repo do slice (`git rev-parse --show-toplevel` bate com `repo:`); se não, peça para abrir a sessão nesse repo e rodar `/pipe resume`. `jq -e '.sandbox.enabled == true' <repo>/.claude/settings.local.json` precisa passar; senão pare e mostre o envelope do `/pipe` (passo 2.5).
+2. **Repo e sandbox:** a sessão está dentro do repo do slice (`/usr/bin/git rev-parse --show-toplevel` bate com `repo:`); se não, peça para abrir a sessão nesse repo e rodar `/pipe resume`. `jq -e '.sandbox.enabled == true' <repo>/.claude/settings.local.json` precisa passar; senão pare e mostre o envelope do `/pipe` (passo 2.5).
 3. **Nada rodando:** nenhum `dispatch` sem `return` no ledger.
 
 ## 2. Escolha dos slices
 
-Pronto é o slice `planned` cujos `depends_on` estão todos `accepted`. Despache **no máximo 2 em paralelo**, e só se os `touches` forem disjuntos (repos diferentes sempre são; no mesmo repo, a interseção de `git -C <repo> ls-files -- <globs>` mais os prefixos dos arquivos novos tem de ser vazia). Slice `kind: human`: não despache; ofereça "Assumir" no gate (passo 5) e marque `human` na tabela.
+Pronto é o slice `planned` cujos `depends_on` estão todos `accepted`. Despache **no máximo 2 em paralelo**, e só se os `touches` forem disjuntos (repos diferentes sempre são; no mesmo repo, a interseção de `/usr/bin/git -C <repo> ls-files -- <globs>` mais os prefixos dos arquivos novos tem de ser vazia). Slice `kind: human`: não despache; ofereça "Assumir" no gate (passo 5) e marque `human` na tabela.
 
 ## 3. Brief e despacho (por slice)
 

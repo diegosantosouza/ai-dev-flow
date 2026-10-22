@@ -19,7 +19,7 @@ Estado em `~/.pipe/missions/<id>/` (MISSION.md, ledger.md, INTAKE.md, SPEC.md, D
 
 ## Regras comuns (valem para as 4 skills)
 
-- **Gate** é um AskUserQuestion cujo texto começa com `[pipe <id> gate <etapa>]`, traz o hash curto (12 caracteres) do artefato mostrado, a opção recomendada primeiro com "(Recomendado)" e no máximo 4 perguntas. **Só um rótulo oferecido conta como decisão.** "Other", texto livre ou resposta vazia não decidem: pergunte de novo.
+- **Gate** é um AskUserQuestion cujo texto começa com `[pipe <id> gate <etapa>]`, traz o hash curto (12 caracteres) do artefato mostrado **escrito no texto da pergunta** ("hash no ledger" ou "ver ledger" não vale), a opção recomendada primeiro com "(Recomendado)" e no máximo 4 perguntas. **Só um rótulo oferecido conta como decisão.** "Other", texto livre ou resposta vazia não decidem: pergunte de novo.
 - **Ledger** (`ledger.md`): uma linha por evento, acrescentada só com `printf '%s\n' "<UTC> | s=${CLAUDE_SESSION_ID} | <evento> | <a> | <b> | <c>" >> ~/.pipe/missions/<id>/ledger.md`, com `date -u +%FT%TZ` na hora. **Nunca use Write ou Edit no ledger.** Troque `|` de texto livre por `/`. Eventos: `mission.open`, `mission.close`, `mission.stop`, `gate.ask`, `gate.answer`, `pin`, `dispatch`, `return`, `verdict`, `adopt`, `resume`. Um `gate.answer` exige um `gate.ask` anterior com o mesmo hash.
 - **Nunca mude o diretório da sessão.** O Bash mantém o diretório entre chamadas, e o `isolation: worktree` do Agent exige que a sessão esteja dentro do repo: um `cd` anterior para a pasta da missão faz o despacho falhar com "not in a git repository". Para a pasta da missão use um subshell `( cd ~/.pipe/missions/<id> && <comando> )` ou caminhos absolutos, e escreva arquivos com a ferramenta Write em caminho absoluto.
 - **Pin:** depois de um "Aprovar", `( cd ~/.pipe/missions/<id> && shasum -a 256 <arquivo> > pins/<arquivo com / trocado por __>.sha256 )`, mais as linhas `gate.answer` e `pin`. Confira antes de cada despacho: `( cd ~/.pipe/missions/<id> && shasum -a 256 -c --strict pins/*.sha256 )`.
@@ -40,10 +40,10 @@ Estado em `~/.pipe/missions/<id>/` (MISSION.md, ledger.md, INTAKE.md, SPEC.md, D
 
 Rode, e se algum falhar, pare, explique e diga o que o humano precisa ajustar:
 
-1. `jq -r '[.askUserQuestionTimeout] | .[0] // "ausente"' ~/.claude/settings.json "$(git rev-parse --show-toplevel 2>/dev/null)/.claude/settings.local.json" 2>/dev/null` deve dar só `ausente` (um timeout resolveria o gate sozinho).
+1. `jq -r '[.askUserQuestionTimeout] | .[0] // "ausente"' ~/.claude/settings.json "$(/usr/bin/git rev-parse --show-toplevel 2>/dev/null)/.claude/settings.local.json" 2>/dev/null` deve dar só `ausente` (um timeout resolveria o gate sozinho).
 2. `printenv CLAUDE_CODE_SUBAGENT_MODEL_FORCE` vazio (essa variável ignora o modelo dos agents).
 3. `jq -e --arg d "$HOME/.pipe" '.permissions.additionalDirectories // [] | index($d)' ~/.claude/settings.json` (a pasta de estado precisa estar em `additionalDirectories`).
-4. Repo git: `git rev-parse --show-toplevel`. Fora de um repo (por exemplo a pasta housi), só dá para fazer intake e spec; diga que build e verify rodam numa sessão aberta no repo membro, com `/pipe resume <id>`.
+4. Repo git: `/usr/bin/git rev-parse --show-toplevel`. Fora de um repo (por exemplo a pasta housi), só dá para fazer intake e spec; diga que build e verify rodam numa sessão aberta no repo membro, com `/pipe resume <id>`.
 5. Sandbox no repo: `jq -e '.sandbox.enabled == true' <repo>/.claude/settings.local.json`. Sem ele, o build não roda; mostre o bloco do envelope: `sandbox.enabled: true`, `sandbox.network.allowedDomains` (registries) e `permissions.ask: ["Agent(pipe-builder)", "Bash(dangerouslyDisableSandbox:true)"]`.
 6. Hooks antigos: se `jq -e '.hooks | tostring | test("native-hooks")' <repo>/.claude/settings.local.json` for verdadeiro, avise que o hook do workflow-ia pode negar `Agent(pipe-*)`; só siga se não houver run nativo ativo.
 7. Liste os plugins habilitados (`jq -r '.enabledPlugins // {} | keys[]' ~/.claude/settings.json`) e avise: um hook de plugin pode responder uma pergunta no lugar do humano.
@@ -73,7 +73,7 @@ Pergunte com um AskUserQuestion (`[pipe <id> gate nivel]`): o nível recomendado
 ### 5. Criação
 
 A pasta já existe desde o intake (passo 3). Crie, com Write em caminho absoluto (a pasta precisa existir antes de qualquer plan mode):
-- `MISSION.md` com o frontmatter `id`, `level`, `risk`, `status: spec`, `next: pipe-spec`, `repos: [<absolutos>]`, `base: {<repo>: <sha de git rev-parse HEAD>}`, `jira`, `sessions: [${CLAUDE_SESSION_ID}]`; no corpo, um parágrafo de objetivo e a tabela `slice | repo | status | falhas | branch | sha | verdict`;
+- `MISSION.md` com o frontmatter `id`, `level`, `risk`, `status: spec`, `next: pipe-spec`, `repos: [<absolutos>]`, `base: {<repo>: <sha de /usr/bin/git rev-parse HEAD>}`, `jira`, `sessions: [${CLAUDE_SESSION_ID}]`; no corpo, um parágrafo de objetivo e a tabela `slice | repo | status | falhas | branch | sha | verdict`;
 - `DECISIONS.md` com `## Decididas` e `## Em aberto` (formato `Q<n>: <pergunta>? Por que importa: <...>. Opções: A (recomendada) <...>; B <...>.`).
 
 Grave `mission.open` no ledger e invoque a skill `pipe-spec` com o id como argumento. "Só pesquisar" vira `next: stop-after-discovery` no MISSION.md.

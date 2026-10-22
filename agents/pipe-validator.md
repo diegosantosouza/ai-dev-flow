@@ -24,7 +24,7 @@ B = base, H = sha da cabeça, R = repo, W = worktree do builder, M = pasta da mi
 
 ## Checagens, nesta ordem
 
-Grave a saída inteira em `$M/proof/$S/raw/<n>-<nome>.txt` e cite o arquivo na prova.
+Grave a saída inteira em `$M/proof/$S/raw/<n>-<nome>.txt` e cite o arquivo na prova. **O brief pode acrescentar checagens, nunca reduzir esta lista:** execute as 11 (0 a 10) mesmo que o brief liste menos. Checagem que não se aplica vira `N/A` com o motivo; a que você não rodou vira `GAP`. **Nenhuma linha pode ser `OK` sem o arquivo de saída correspondente em `raw/`.**
 
 0. **Pins.** `cd "$M" && shasum -a 256 -c --strict pins/*.sha256`. Falhou: veredito BLOCKING e pare.
 1. **Escopo.** `/usr/bin/git -C "$R" diff --name-status "$B...$H"`. Todo arquivo tocado casa um glob de `touches` do slice. Teste apagado (`D`) ou renomeado (`R`) exige justificativa no relatório, conferida contra o `R#` citado.
@@ -65,7 +65,7 @@ Confira cada requisito do Proof contract contra o código real.
 
 Escreva em `$M/proof/$S/` (a única pasta onde você escreve):
 - `qa-<PASS|BLOCKING>-<sha curto de H>.md`: o veredito, o SHA, uma linha de evidência principal, a tabela das checagens 0 a 10 (OK, FAIL, WARN ou GAP) e os comandos com o resultado;
-- `verdict.md`, cuja **primeira linha** é exatamente `VERDICT: PASS sha=<H completo>` ou `VERDICT: BLOCKING sha=<H completo>`, seguida de uma frase com o motivo.
+- `verdict.md`, cuja **primeira linha** é exatamente `VERDICT: PASS sha=<H completo>` ou `VERDICT: BLOCKING sha=<H completo>`, seguida de uma frase com o motivo e da tabela das checagens 0 a 10 (**uma linha por checagem**, com `OK|FAIL|WARN|GAP|N/A` e o arquivo `raw/` que a prova).
 
 ## Relatório (sua última mensagem)
 

@@ -13,6 +13,7 @@
 #   S5  each pipe skill is at most 16000 bytes (compaction re-attaches a skill only up to a limit)
 #   S6  the builder, the validator and the reviewer call /usr/bin/git and /usr/bin/grep, never the bare commands
 #   S7  no bare `cd <path>` in the skills (a subshell or an absolute path instead)
+#   S8  no bare git command in the skills either (the orchestrator is hit by the same hook)
 # Sources: https://code.claude.com/docs/en/skills , https://code.claude.com/docs/en/sub-agents
 set -euo pipefail
 
@@ -150,6 +151,16 @@ done
 for s in $PIPE_SKILLS; do
   if body "$SKILLS_DIR/$s/SKILL.md" | sed -e 's/( *cd //g' | grep -n -E '(^|[^A-Za-z-])cd [~$/"'"'"']' >/dev/null; then
     fail "S7 skills/$s: bare 'cd <path>' (use a subshell: ( cd <path> && ... ), or an absolute path)"
+  fi
+done
+
+# --- S8: absolute git in the skills too ----------------------------------------------------------
+# The orchestrator runs in the main session, where the same global hook rewrites the short git commands
+# and truncates their output (a truncated diff or worktree list is read as complete).
+
+for s in $PIPE_SKILLS; do
+  if body "$SKILLS_DIR/$s/SKILL.md" | grep -n -E '(^|[^/A-Za-z-])git( -c [^ ]+)?( -C [^ ]+)? (rev-parse|ls-files|diff|log|show|status|add|commit|stash|branch|fetch|pull|worktree|checkout|switch|restore)' >/dev/null; then
+    fail "S8 skills/$s: bare git command (use /usr/bin/git)"
   fi
 done
 
