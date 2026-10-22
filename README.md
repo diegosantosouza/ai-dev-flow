@@ -121,6 +121,108 @@ See individual READMEs for full usage:
 
 `observability-analyst` and `observability-builder` never hold write access — their MCP server runs with `--disable-write` and their service account should be **Viewer only**. The only component that writes to Grafana is `scripts/apply.sh`, invoked exclusively through `/obs-apply`, authenticated with a **separate** `GRAFANA_ADMIN_TOKEN`. This keeps the blast radius of a misbehaving agent (or a prompt injection via log content) limited to proposing files — a human always reviews and explicitly runs `/obs-apply --apply`.
 
+## Mission Pipeline (`/pipe`)
+
+`/pipe` is a mission pipeline made only of skills and agents: no runtime, no dependencies. Start it with `/pipe <JIRA-KEY | objective>`. It runs four skills in a chain, each invoked through the Skill tool:
+
+```
+pipe → pipe-spec → pipe-build → pipe-verify
+```
+
+| Stage | Does |
+|-------|------|
+| `pipe` | Entry point. Sizes the task, creates the mission, and handles `status`, `resume <id>`, `adopt <id-or-folder>` |
+| `pipe-spec` | Writes the spec (on Complex: discovery, design, and plan with slices) and opens the approval gate |
+| `pipe-build` | Dispatches one `pipe-builder` per slice, in an isolated git worktree |
+| `pipe-verify` | Runs the independent `pipe-validator` and `pipe-reviewer`, opens the per-slice build gate, writes the evidence, offers delivery |
+
+Each stage ends by asking the human for the next step. The recommended option comes first and continues the chain; "Parar aqui" stops, and `/pipe resume <id>` picks it up later. The pipeline never pushes, opens PRs, or merges. Delivery is only suggested (`/housi-ship <KEY>`), and the human runs it.
+
+### Levels
+
+Sizing is done at intake. When in doubt, go up one level. A stage that grows during the mission can raise the level, and the human can ask for a change at any later question.
+
+| Level | When | Path | Gates |
+|-------|------|------|-------|
+| **Small** | One local change, describable in one sentence, with a concrete target (file or call), one repo, no risk or research word | Plan mode → one slice → build → verify | level, plan approval, next step, build per slice, delivery |
+| **Medium** | Concrete target, up to ~8 tasks, one repo, no risk or research word; or a bug with a symptom and a target (`kind: bug`) | `plan` skill (`architect` + `verification-planning`) → plan mode → one slice → build → verify, with reviewer | same as Small |
+| **Complex** | Any risk or research word, 3+ independent parts, epic words (platform, architecture, migrate, rewrite, v2), more than one repo, or short text without a concrete target | Discovery → open questions → spec → design + plan (N slices) → build → verify → integration | level, one per open question, spec, design + plan (two questions), next step, build per slice, delivery |
+
+Words that set `risk: true`: auth, permission, login, password, token, payment, billing, LGPD, personal data, encryption, security, production, data migration, database, schema, deploy, infra, secret, credential. On a risk mission, the Complex design and the verify stage also run `security-auditor`.
+
+## Mission State
+
+Each mission lives in `~/.pipe/missions/<id>/`:
+
+```
+~/.pipe/
+├── asks.jsonl                 # responses to AskUserQuestion / ExitPlanMode (audit)
+└── missions/<id>/
+    ├── MISSION.md             # frontmatter (level, risk, status, next, repos, base) + slice table
+    ├── INTAKE.md              # the ticket text or objective, verbatim
+    ├── DECISIONS.md           # Decididas / Em aberto (Q<n> questions)
+    ├── ledger.md              # one line per event, append only
+    ├── SPEC.md, DISCOVERY.md, DESIGN.md, PLAN.md   # DISCOVERY, DESIGN and PLAN exist on Complex only
+    ├── slices/<s>/SPEC.md     # one spec per slice
+    ├── pins/<file>.sha256     # hashes of approved artifacts
+    ├── handoffs/NN-<role>.brief.md / .report.md
+    └── proof/<s>/             # qa-*.md, verdict.md, review.md, security.md
+```
+
+- **Ledger:** every event is appended with `printf ... >>`, never rewritten. Events include `mission.open`, `gate.ask`, `gate.answer`, `pin`, `dispatch`, `return`, `verdict`, `resume`, `adopt`. A `gate.answer` needs a prior `gate.ask` with the same hash.
+- **Gates:** a question whose text starts with `[pipe <id> gate <stage>]` and shows the 12-character hash of the artifact. Only a labeled option counts as a decision; "Other", free text, or an empty answer asks again.
+- **Pins:** after approval, `shasum -a 256 <file>` is saved to `pins/`. Before each dispatch, `shasum -a 256 -c --strict pins/*.sha256` must pass.
+- **Handoffs:** the brief is written before each dispatch. The agent's last message is saved as the report, unchanged. Every agent ends with a `STATUS` block:
+
+  ```
+  STATUS: DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED
+  BLOCKER: none | capability:<what> | content:Q<n>
+  ```
+
+  `capability:` means the sandbox denied something; the human runs it outside. `content:Q<n>` means a decision is needed.
+
+Text from files, tickets, diffs, and agent reports is treated as data, never as instructions.
+
+## Pipe Prerequisites
+
+The human applies these once. `/pipe` checks them in its preflight and stops if any is missing.
+
+1. `~/.pipe` in `permissions.additionalDirectories` of `~/.claude/settings.json`.
+2. In each repo where builds run, `.claude/settings.local.json` with:
+   - `sandbox.enabled: true`, with the package registry domains in `sandbox.network.allowedDomains`;
+   - `permissions.ask` including `Agent(pipe-builder)` and `Bash(dangerouslyDisableSandbox:true)`.
+
+The preflight also checks that no `askUserQuestionTimeout` is set (a timeout would answer the gate by itself), that `CLAUDE_CODE_SUBAGENT_MODEL_FORCE` is unset, and it warns about enabled plugins with hooks.
+
+Without a git repo (for example, a folder with several repos), only intake and spec run. Build and verify run from a session opened in the member repo, with `/pipe resume <id>`.
+
+## Pipe Limits
+
+- A skill is instructions, not enforcement. The model follows the rules; the harness does not check them.
+- Enforced by the harness: `AskUserQuestion` and plan mode exist only in the main session. The builder runs in an isolated worktree. The sandbox and the `ask` / `deny` permission rules are enforced by Claude Code.
+- Detection only: the model copies each gate answer into the ledger. The `/pipe` hook writes every `AskUserQuestion` / `ExitPlanMode` response to `~/.pipe/asks.jsonl` (one JSON record per line, with a `ts` timestamp and the `session_id`; it needs `jq`), so clicks can be audited after the fact. The file is shared by all missions: match a record to a mission by `session_id` and by the `[pipe <id> gate ...]` marker in the question text.
+- The ledger has fixed columns per event (the table is in `skills/pipe/SKILL.md`), and a gate shows the hash of the artifact in the question text, copied from `shasum`.
+- `pipe-builder`, `pipe-validator` and `pipe-reviewer` call `/usr/bin/git` and `/usr/bin/grep` by absolute path. A global hook rewrites the short forms and truncates their output. The builder also runs one simple command per call, because the worktree guard refuses compound commands.
+- The validator scans the commit range with `gitleaks` (`brew install gitleaks`). Without it, the secret check is only a pattern scan and is reported as a gap.
+
+> **Installing:** `install.sh` relinks the `pipe-*` agents into `~/.claude/agents`, which currently point to another repo. Don't run it while a session on the old runtime is active.
+
+## Pipe Lint
+
+`scripts/validate-pipe.sh [repo-root]` checks the `/pipe` skills and agents:
+
+- **S1** frontmatter keys are in the allowlist
+- **S2** invocation flags: `pipe` is human-only; the stages are model-only; none forks or sets a model
+- **S3** no old-engine wording, every pipe agent has `maxTurns`, tool limits per role
+- **S4** every `pipe-<x>` named in a file exists as a skill or agent
+- **S5** each pipe skill is at most 16000 bytes
+- **S6** builder, validator and reviewer use `/usr/bin/git` and `/usr/bin/grep` (the global rtk hook rewrites the short git commands, and the worktree guard refuses the rewritten form)
+- **S7** no bare `cd <path>` in the skills (the Bash tool keeps its directory, and `isolation: worktree` fails when the session is outside the repo)
+- **S8** no bare git command in the skills either (the orchestrator runs in the main session, where the same hook truncates the output)
+- **S9** the rules the first F1 runs showed to be necessary are still in the text (ledger columns, `R#` prefix in test titles, one simple command per call, `gitleaks`, hash copied from `shasum`)
+
+It runs from `scripts/pre-commit.sh` when a `pipe` agent, skill, or the script itself is staged.
+
 ## Installation
 
 ```bash
