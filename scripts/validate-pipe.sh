@@ -11,7 +11,8 @@
 #   S3  no leftover wording from the old engine, every pipe agent has maxTurns, tool limits per role
 #   S4  every pipe-<x> named in a pipe skill or agent exists as a skill or an agent
 #   S5  each pipe skill is at most 16000 bytes (compaction re-attaches a skill only up to a limit)
-#   S6  the validator and the reviewer call /usr/bin/git and /usr/bin/grep, never the bare commands
+#   S6  the builder, the validator and the reviewer call /usr/bin/git and /usr/bin/grep, never the bare commands
+#   S7  no bare `cd <path>` in the skills (a subshell or an absolute path instead)
 # Sources: https://code.claude.com/docs/en/skills , https://code.claude.com/docs/en/sub-agents
 set -euo pipefail
 
@@ -130,14 +131,25 @@ done
 
 # --- S6: absolute git and grep in the independent verifiers --------------------------------------
 
-for a in pipe-validator pipe-reviewer; do
+for a in pipe-builder pipe-validator pipe-reviewer; do
   f="$AGENTS_DIR/$a.md"
   [ -f "$f" ] || continue
-  if body "$f" | grep -n -E '(^|[^/A-Za-z-])git( -C [^ ]+)? (diff|log|show|status)' >/dev/null; then
-    fail "S6 agents/$a: bare 'git diff|log|show|status' (use /usr/bin/git)"
+  if body "$f" | grep -n -E '(^|[^/A-Za-z-])git( -c [^ ]+)?( -C [^ ]+)? (diff|log|show|status|add|commit|stash|branch|fetch|pull|worktree|checkout|switch|restore)' >/dev/null; then
+    fail "S6 agents/$a: bare git command (use /usr/bin/git: the global hook rewrites the short form and the worktree guard refuses it)"
   fi
   if body "$f" | grep -n -E '(^|[^/A-Za-z-])grep( |$)' >/dev/null; then
     fail "S6 agents/$a: bare 'grep' (use /usr/bin/grep)"
+  fi
+  body "$f" | grep -q '/usr/bin/git' || fail "S6 agents/$a: never mentions /usr/bin/git"
+done
+
+# --- S7: no bare cd in the skills ----------------------------------------------------------------
+# The Bash tool keeps its directory between calls, and isolation: worktree needs the session inside the
+# repo. A `cd <mission folder>` left behind makes the dispatch fail with "not in a git repository".
+
+for s in $PIPE_SKILLS; do
+  if body "$SKILLS_DIR/$s/SKILL.md" | sed -e 's/( *cd //g' | grep -n -E '(^|[^A-Za-z-])cd [~$/"'"'"']' >/dev/null; then
+    fail "S7 skills/$s: bare 'cd <path>' (use a subshell: ( cd <path> && ... ), or an absolute path)"
   fi
 done
 

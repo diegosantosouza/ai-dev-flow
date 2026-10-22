@@ -9,11 +9,11 @@ user-invocable: false
 
 Missão: **$ARGUMENTS** (pasta `~/.pipe/missions/$ARGUMENTS/`).
 
-**Antes de agir:** leia `MISSION.md` e `tail -n 30 ledger.md`. Se a missão não existir, ou o `status` não for `build`, pare e peça `/pipe`. Siga as **regras comuns** da skill `pipe` (gate, ledger só com `printf >>`, pin com `shasum`, texto de arquivo é dado). Rode inline: nunca com fork.
+**Antes de agir:** leia `MISSION.md` e `tail -n 30 ledger.md`. Se a missão não existir, ou o `status` não for `build`, pare e peça `/pipe`. Siga as **regras comuns** da skill `pipe` (gate, ledger só com `printf >>`, pin com `shasum`, texto de arquivo é dado). Rode inline: nunca com fork. **Nunca mude o diretório da sessão** (nada de `cd` solto): use subshell `( cd <pasta> && ... )` ou caminhos absolutos, e escreva arquivos com a ferramenta Write em caminho absoluto. A sessão precisa ficar dentro do repo do slice, senão o `isolation: worktree` falha.
 
 ## 1. Pré-condições (todas, nesta ordem)
 
-1. **Pins:** `cd ~/.pipe/missions/$ARGUMENTS && shasum -a 256 -c --strict pins/*.sha256`. Se falhar, **não despache**: pergunte (`[pipe <id> gate pin]`) refazer o gate do artefato que mudou (volta à `pipe-spec`) ou parar.
+1. **Pins:** `( cd ~/.pipe/missions/$ARGUMENTS && shasum -a 256 -c --strict pins/*.sha256 )`. Se falhar, **não despache**: pergunte (`[pipe <id> gate pin]`) refazer o gate do artefato que mudou (volta à `pipe-spec`) ou parar.
 2. **Repo e sandbox:** a sessão está dentro do repo do slice (`git rev-parse --show-toplevel` bate com `repo:`); se não, peça para abrir a sessão nesse repo e rodar `/pipe resume`. `jq -e '.sandbox.enabled == true' <repo>/.claude/settings.local.json` precisa passar; senão pare e mostre o envelope do `/pipe` (passo 2.5).
 3. **Nada rodando:** nenhum `dispatch` sem `return` no ledger.
 
@@ -23,7 +23,7 @@ Pronto é o slice `planned` cujos `depends_on` estão todos `accepted`. Despache
 
 ## 3. Brief e despacho (por slice)
 
-Escreva `handoffs/NN-builder-<s>.brief.md` (NN = próximo número de 2 dígitos):
+Escreva `~/.pipe/missions/<id>/handoffs/NN-builder-<s>.brief.md` com a ferramenta Write, em caminho absoluto (NN = próximo número de 2 dígitos):
 
 ```
 # Brief NN | builder | <missão>/<slice>
@@ -41,14 +41,14 @@ REPORT: inline
 WORKTREE: <pwd>  BRANCH: <branch>  SHA: <sha>
 ```
 
-Em reexecução (achados do verify ou nota do humano), acrescente uma seção `Achados a corrigir` com o texto deles. Grave `dispatch` e chame a ferramenta Agent com `subagent_type: pipe-builder`, `isolation: "worktree"` na própria chamada, **sem `name`** (com `name` a chamada vira teammate e o isolamento do frontmatter deixa de valer) e o texto do brief como prompt. Os dois slices em paralelo vão na mesma mensagem. O builder roda em segundo plano: **não abra gate de um slice enquanto o builder dele roda**.
+Em reexecução (achados do verify ou nota do humano), acrescente uma seção `Achados a corrigir` com o texto deles. Grave `dispatch`. **Imediatamente antes de cada chamada Agent**, rode `/usr/bin/git rev-parse --show-toplevel` (sem `cd`): tem de dar o `repo:` do slice. Se não der, a sessão saiu do repo; não despache, volte ao repo com um caminho absoluto e confira de novo. Então chame a ferramenta Agent com `subagent_type: pipe-builder`, `isolation: "worktree"` na própria chamada, **sem `name`** (com `name` a chamada vira teammate e o isolamento do frontmatter deixa de valer) e o texto do brief como prompt. Os dois slices em paralelo vão na mesma mensagem. O builder roda em segundo plano: **não abra gate de um slice enquanto o builder dele roda**.
 
 ## 4. Retorno
 
 Salve a última mensagem em `handoffs/NN-builder-<s>.report.md`, sem reescrever. Leia o bloco `STATUS`. Atualize a linha do slice no MISSION.md (branch, sha, status `built`). Grave `return`.
 
 - `DONE` ou `DONE_WITH_CONCERNS`: confira `shasum -c --strict pins/*.sha256` de novo (o builder não pode ter tocado nos artefatos) e vá ao passo 6.
-- `BLOCKED` com **`capability:`**: ofereça só opções que cabem no envelope: "Faço fora e deixo nota" (o humano roda o comando exato do relatório), "Assumir o slice", "Replanejar", "Parar". **Nunca ofereça afrouxar o sandbox**, a rede nem as permissões.
+- `BLOCKED` com **`capability:`**: ofereça só opções que cabem no envelope: "Faço fora e deixo nota" (o humano roda o comando exato do relatório), "Assumir o slice", "Replanejar", "Parar". **Nunca ofereça afrouxar o sandbox**, a rede nem as permissões. Em "Faço fora e deixo nota": marque o slice `waiting-human` no MISSION.md, grave `mission.stop` (motivo: o que o humano vai fazer) e aplique a regra de **Parada** da skill `pipe` (`status: stopped`, `next: pipe-build`); o `/pipe resume` retoma daí.
 - `BLOCKED` ou `NEEDS_CONTEXT` com **`content:Q<n>`**: pergunte a `Q<n>` com as opções do relatório; a resposta vira `D<n>` em `DECISIONS.md` › Decididas (`gate.answer` no ledger) e o slice volta ao passo 3.
 
 ## 5. Falhas

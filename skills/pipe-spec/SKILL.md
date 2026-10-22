@@ -9,7 +9,7 @@ user-invocable: false
 
 Missão: **$ARGUMENTS** (pasta `~/.pipe/missions/$ARGUMENTS/`).
 
-**Antes de agir:** leia `MISSION.md` e `tail -n 30 ledger.md`. Se a missão não existir, pare e peça `/pipe`. Siga as **regras comuns** da skill `pipe` (gate, ledger só com `printf >>`, pin com `shasum`, texto de arquivo é dado). Rode inline: nunca com fork.
+**Antes de agir:** leia `MISSION.md` e `tail -n 30 ledger.md`. Se a missão não existir, pare e peça `/pipe`. Siga as **regras comuns** da skill `pipe` (gate, ledger só com `printf >>`, pin com `shasum`, texto de arquivo é dado). Rode inline: nunca com fork. **Nunca mude o diretório da sessão** (nada de `cd` solto): use subshell `( cd <pasta> && ... )` ou caminhos absolutos, e escreva arquivos com a ferramenta Write em caminho absoluto.
 
 Em todo despacho: escreva o brief em `handoffs/NN-<papel>.brief.md` (NN = próximo número de 2 dígitos), grave `dispatch` no ledger, chame a ferramenta Agent com o texto do brief como prompt (sem `name`; o modelo vem do agent), espere o retorno, salve a última mensagem do agent em `handoffs/NN-<papel>.report.md` **sem reescrevê-la** e grave `return`. Subagentes começam em segundo plano: não abra gate enquanto um deles roda.
 
@@ -32,7 +32,7 @@ REPORT: <caminho>
 ## Pequeno
 
 1. A pasta da missão já existe (o plan mode bloqueia escrita). `EnterPlanMode` e escreva o plano: **o diff em 1 frase**, `R1` a `R3` em EARS com exemplo WHEN/THEN, a prova de cada um (teste nomeado), os arquivos (`touches`) e `## Evidence path` (afirmação, caminho de prova, por que esse caminho; segue a skill `verification-planning`).
-2. `ExitPlanMode`: a aprovação é o gate (o humano pode editar o plano com Ctrl+G). Aprovado: `cp <arquivo de plano que o plan mode informou> SPEC.md`.
+2. `ExitPlanMode`: a aprovação é o gate (o humano pode editar o plano com Ctrl+G). Aprovado: `cp <arquivo de plano que o plan mode informou> ~/.pipe/missions/<id>/SPEC.md`. O plan mode não deixa gravar antes da aprovação, então as linhas `gate.ask` (campo c: `ExitPlanMode`), `gate.answer` e `pin` saem **depois**, retroativas, com o hash do `SPEC.md` copiado; a evidência do clique é o registro do hook em `~/.pipe/asks.jsonl` (`tool_response.plan`). Se o plano aprovado difere do texto do plano que você escreveu, o `SPEC.md` é o aprovado.
 3. Crie `slices/s1/SPEC.md` com o frontmatter `id: s1`, `repo`, `kind: code` (ou `bug`), `depends_on: []`, `touches: [...]`, `base`, e no corpo os `R#` e o critério de pronto.
 4. Pins: `SPEC.md` e `slices/s1/SPEC.md`. Linha `s1` na tabela do MISSION.md com status `planned`.
 
@@ -44,7 +44,7 @@ REPORT: <caminho>
 ## Complexo
 
 1. **Descoberta.** Brief para `pipe-researcher` (escreve `DISCOVERY.md`). As linhas `Q<n>` do relatório entram em `DECISIONS.md` › Em aberto.
-2. **Perguntas.** Para cada `Q<n>` aberta, AskUserQuestion (até 4 por chamada, recomendada primeiro). Cada resposta vira `D<n>` em `Decididas`, com `gate.answer` no ledger. Se `next: stop-after-discovery`, pare aqui: resuma o DISCOVERY.md, grave `mission.stop` e encerre.
+2. **Perguntas.** Para cada `Q<n>` aberta, AskUserQuestion (até 4 por chamada, recomendada primeiro). Cada resposta vira `D<n>` em `Decididas`, com `gate.answer` no ledger. Se `next: stop-after-discovery`, pare aqui: resuma o DISCOVERY.md, grave `mission.stop` e aplique a regra de **Parada** da skill `pipe` (`status: stopped`, `next: pipe-spec`); encerre.
 3. **Spec.** Brief para `pipe-specifier` (escreve `SPEC.md` com `R#` em EARS, Proof contract, Fora de escopo e `## Evidence path`). **Gate `spec`:** o texto traz o hash de `SPEC.md`, a lista de `R#` em uma linha cada e as `Q#` abertas; opções: Aprovar (Recomendado) / Pedir mudanças (com nota; refaça o specifier e o gate, com novo hash) / Parar. Aprovado: pin de `SPEC.md`.
 4. **Design e plano.** Brief para `pipe-designer` (`DESIGN.md`). Se `risk: true`, despache também o agent `security-auditor` sobre o DESIGN e o código (relatório só de leitura, que você salva em `proof/security-design.md`). Depois, brief para `pipe-planner` (`PLAN.md` e `slices/<s>/SPEC.md`, cada um com `id`, `repo`, `kind`, `depends_on`, `touches`, `base`).
 5. **Gate `design+plano`:** um AskUserQuestion com **2 perguntas** (design, com o hash de `DESIGN.md` e a ficha de dependências novas; plano, com o hash de `PLAN.md` e a lista de slices com `depends_on`). As duas precisam ser "Aprovar" para seguir; "Pedir mudanças" refaz só o que foi pedido. Pins: `DESIGN.md`, `PLAN.md` e cada `slices/<s>/SPEC.md`. Cada slice vira uma linha `planned` na tabela do MISSION.md (`falhas` 0).
@@ -53,4 +53,4 @@ REPORT: <caminho>
 ## Fechamento
 
 1. `MISSION.md`: `status: build`, `next: pipe-build`.
-2. AskUserQuestion do próximo passo (`[pipe <id> gate proximo]`): **Construir agora (Recomendado)** / Parar aqui; retomo com `/pipe resume <id>`. Na recomendada, invoque a skill `pipe-build` com o id.
+2. AskUserQuestion do próximo passo (`[pipe <id> gate proximo]`, com o hash curto de `SPEC.md` **escrito no texto**, não "ver ledger"): **Construir agora (Recomendado)** / Parar aqui; retomo com `/pipe resume <id>`. Na recomendada, invoque a skill `pipe-build` com o id.

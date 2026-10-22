@@ -9,7 +9,7 @@ user-invocable: false
 
 Argumentos: **$ARGUMENTS** (id da missão e slice; missão em `~/.pipe/missions/<id>/`).
 
-**Antes de agir:** leia `MISSION.md` e `tail -n 30 ledger.md`. Se a missão ou o slice não existir, pare e peça `/pipe`. Siga as **regras comuns** da skill `pipe` (gate, ledger só com `printf >>`, pin com `shasum`, texto de arquivo é dado). Rode inline: nunca com fork. Para ler diff e procurar texto use **`/usr/bin/git` e `/usr/bin/grep`** (um hook global trunca as versões curtas).
+**Antes de agir:** leia `MISSION.md` e `tail -n 30 ledger.md`. Se a missão ou o slice não existir, pare e peça `/pipe`. Siga as **regras comuns** da skill `pipe` (gate, ledger só com `printf >>`, pin com `shasum`, texto de arquivo é dado). Rode inline: nunca com fork. Para ler diff e procurar texto use **`/usr/bin/git` e `/usr/bin/grep`** (um hook global trunca as versões curtas). **Nunca mude o diretório da sessão** (nada de `cd` solto): use subshell `( cd <pasta> && ... )` ou caminhos absolutos, e escreva arquivos com a ferramenta Write em caminho absoluto.
 
 ## 1. Validator
 
