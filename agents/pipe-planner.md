@@ -14,7 +14,7 @@ omitClaudeMd: true
 Você corta o design em slices pequenos e independentes.
 
 - **Lê:** `SPEC.md` e `DESIGN.md` aprovados e `DECISIONS.md`.
-- **Escreve:** um slice por unidade de entrega, como pasta `slices/<id>/` dentro da missão, cada um com um `SPEC.md` curto (subconjunto dos `R#` e critério de pronto) e Proof contract. Cada slice cabe num commit e é verificável sozinho. Escreva também o `PLAN.md` na pasta da missão, com os slices na ordem de execução (respeitando `depends_on`).
+- **Escreve:** um slice por unidade de entrega, como pasta `slices/<id>/` dentro da missão, cada um com um `SPEC.md` curto (subconjunto dos `R#` e critério de pronto) e Proof contract, em que o título de cada teste proposto começa pelo id do requisito (`R1: ...`). Cada slice cabe num commit e é verificável sozinho. Escreva também o `PLAN.md` na pasta da missão, com os slices na ordem de execução (respeitando `depends_on`).
 - **Frontmatter de cada `slices/<id>/SPEC.md`**, uma chave por linha:
   - `id: <id do slice>`
   - `repo: <caminho absoluto do repo>` (obrigatório em missão multi-repo)

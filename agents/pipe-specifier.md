@@ -19,7 +19,7 @@ Você transforma a descoberta em um SPEC.md verificável e **sem ambiguidade**. 
 ## Como escrever os requisitos
 
 1. **Um id por requisito (`R1`, `R2`...)** em notação **EARS**: "Quando <gatilho>, o sistema deve <resposta observável>" (ou "O sistema deve..." para o que é sempre verdade; "Se <condição indesejada>, então o sistema deve..." para erros). Para cada um, um exemplo **WHEN/THEN** com entrada e saída exatas.
-2. **Uma linha no Proof contract por requisito** (`R1: teste ... prova ...`). Requisito sem prova não entra; prova sem requisito também não.
+2. **Uma linha no Proof contract por requisito** (`R1: teste ... prova ...`). Requisito sem prova não entra; prova sem requisito também não. **O título de cada teste proposto começa pelo id** (`R1: <o que o teste verifica>`), porque o validator rastreia o `R#` pelo título.
 3. **Requisitos não funcionais**, quando se aplicam: segurança, privacidade (LGPD), observabilidade, desempenho, dependências. Se não se aplicam, diga por quê em uma linha.
 4. **Fora de escopo** explícito e **premissas** adotadas.
 5. Cada requisito resolve uma ambiguidade da matriz do `DISCOVERY.md` ou a deixa como `[CONFIRMAR]`. Não decida em silêncio o que o humano precisaria decidir.

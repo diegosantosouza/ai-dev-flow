@@ -16,12 +16,14 @@ isolation: worktree
 
 Um hook global reescreve os comandos de escrita e leitura do git (add, commit, status, diff, log, show) para a forma `rtk git ...`, e a trava do worktree isolado **recusa** essa forma ("runs rtk with a git command among its operands"). Use sempre **`/usr/bin/git`** (caminho absoluto) em **todo** comando git, a partir da raiz do seu worktree, e **`/usr/bin/grep`** para buscar texto. O caminho absoluto o hook não toca. Se mesmo assim um git for recusado, não contorne: devolva `BLOCKED` com `capability:` e o comando exato.
 
+**Um comando simples por chamada.** A trava do worktree recusa comando composto (`&&`, `;`, `|`, `$( )` encadeando comandos). Crie e altere arquivos com Write e Edit, nunca com `cat >`, `echo >` ou `sed -i`; rode um comando de cada vez.
+
 Você implementa um slice. O brief traz a base, o `touches`, os R# e a branch.
 
 - **Lê, nesta ordem:** o que o brief manda (SPEC, DESIGN, `DECISIONS.md` › Decididas, `slices/<s>/SPEC.md`) e o `CLAUDE.md` ou `AGENTS.md` do repo, cujo caminho vem no brief.
 - **Branch:** na raiz do seu worktree, `/usr/bin/git switch -c pipe/<missão>/<slice> <base>`, com a base do brief. O worktree parte da branch padrão, não da base.
 - **Escreve:** código e testes só dentro de `touches`, e nada na pasta da missão. Um commit por slice, em Conventional Commits: `/usr/bin/git add <cada arquivo de touches>` (nunca `-A` nem `.`), confira com `/usr/bin/git status --short` e commite com `/usr/bin/git -c commit.gpgsign=false commit -m "<mensagem>"` (o sandbox bloqueia o gpg; quem assina é o humano antes do push).
-- **Obrigatório:** todo código novo tem teste. Rode os testes antes de devolver. **Cite o id do requisito (`R3`) no título do teste que o prova**: o validator rastreia cada `R#` até um teste, e um teste que passa sem a sua mudança é reprovado. **Dependência nova só se o DESIGN a aprovou** (ficha em `Dependências novas`); sem ficha, não mexa em `package.json`, `go.mod` nem equivalentes.
+- **Obrigatório:** todo código novo tem teste. Rode os testes antes de devolver. **O título de cada teste novo começa pelo id do requisito que ele prova (`R3: ...`)**: o validator rastreia cada `R#` até o título de um teste, e um teste que passa sem a sua mudança é reprovado. Se o brief nomeia o teste sem o id, acrescente o prefixo mesmo assim e diga isso no relatório. **Dependência nova só se o DESIGN a aprovou** (ficha em `Dependências novas`); sem ficha, não mexa em `package.json`, `go.mod` nem equivalentes.
 - **Caches e temporários:** `$TMPDIR` (por exemplo `npm_config_cache="$TMPDIR/npm"`). `~/.npm` e `~/Library/Caches` não são graváveis no sandbox.
 - **Teste existente:** se precisar alterar ou apagar um teste que já existia, justifique no relatório, em `## Integridade de testes`, citando o arquivo e o `R#`.
 - **`kind: bug`:** o primeiro commit contém só o teste que falha na base, por causa do bug, sem código de produção. Rode-o e mostre a falha no relatório. O segundo commit corrige. Esse teste não muda depois, nem com justificativa: se estiver errado, devolva `BLOCKED` com `content:Q<n>`.

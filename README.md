@@ -200,8 +200,10 @@ Without a git repo (for example, a folder with several repos), only intake and s
 
 - A skill is instructions, not enforcement. The model follows the rules; the harness does not check them.
 - Enforced by the harness: `AskUserQuestion` and plan mode exist only in the main session. The builder runs in an isolated worktree. The sandbox and the `ask` / `deny` permission rules are enforced by Claude Code.
-- Detection only: the model copies each gate answer into the ledger. The `/pipe` hook writes every `AskUserQuestion` / `ExitPlanMode` response to `~/.pipe/asks.jsonl`, so clicks can be audited after the fact.
-- `pipe-validator` and `pipe-reviewer` call `/usr/bin/git` and `/usr/bin/grep` by absolute path. A global hook rewrites the short forms and truncates their output.
+- Detection only: the model copies each gate answer into the ledger. The `/pipe` hook writes every `AskUserQuestion` / `ExitPlanMode` response to `~/.pipe/asks.jsonl` (one JSON record per line, with a `ts` timestamp and the `session_id`; it needs `jq`), so clicks can be audited after the fact. The file is shared by all missions: match a record to a mission by `session_id` and by the `[pipe <id> gate ...]` marker in the question text.
+- The ledger has fixed columns per event (the table is in `skills/pipe/SKILL.md`), and a gate shows the hash of the artifact in the question text, copied from `shasum`.
+- `pipe-builder`, `pipe-validator` and `pipe-reviewer` call `/usr/bin/git` and `/usr/bin/grep` by absolute path. A global hook rewrites the short forms and truncates their output. The builder also runs one simple command per call, because the worktree guard refuses compound commands.
+- The validator scans the commit range with `gitleaks` (`brew install gitleaks`). Without it, the secret check is only a pattern scan and is reported as a gap.
 
 > **Installing:** `install.sh` relinks the `pipe-*` agents into `~/.claude/agents`, which currently point to another repo. Don't run it while a session on the old runtime is active.
 
@@ -217,6 +219,7 @@ Without a git repo (for example, a folder with several repos), only intake and s
 - **S6** builder, validator and reviewer use `/usr/bin/git` and `/usr/bin/grep` (the global rtk hook rewrites the short git commands, and the worktree guard refuses the rewritten form)
 - **S7** no bare `cd <path>` in the skills (the Bash tool keeps its directory, and `isolation: worktree` fails when the session is outside the repo)
 - **S8** no bare git command in the skills either (the orchestrator runs in the main session, where the same hook truncates the output)
+- **S9** the rules the first F1 runs showed to be necessary are still in the text (ledger columns, `R#` prefix in test titles, one simple command per call, `gitleaks`, hash copied from `shasum`)
 
 It runs from `scripts/pre-commit.sh` when a `pipe` agent, skill, or the script itself is staged.
 

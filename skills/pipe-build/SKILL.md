@@ -33,7 +33,7 @@ Ler, nesta ordem: slices/<s>/SPEC.md (sha256 <12>), SPEC.md, DESIGN.md, DECISION
 Escrever: código e testes no worktree, só dentro de touches=<globs>; 1 commit; nada na pasta da missão
 Limites: sem push nem PR; sem dependência fora da ficha do DESIGN; não editar artefato com pin; kind=<code|docs|bug>
 Envelope: o sandbox grava em <worktree>, $TMPDIR e ~/.pipe; rede só <domínios do settings>; caches em $TMPDIR
-Pronto quando: <R# → prova (teste nomeado ou comando cujo exit decide)>
+Pronto quando: <R# → prova (teste com o título começando pelo id, `R1: ...`, ou comando cujo exit decide)>
 Última mensagem, exatamente:
 STATUS: DONE | DONE_WITH_CONCERNS | NEEDS_CONTEXT | BLOCKED
 BLOCKER: none | capability:<o quê> | content:Q<n>

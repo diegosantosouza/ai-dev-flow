@@ -31,14 +31,14 @@ REPORT: <caminho>
 
 ## Pequeno
 
-1. A pasta da missão já existe (o plan mode bloqueia escrita). `EnterPlanMode` e escreva o plano: **o diff em 1 frase**, `R1` a `R3` em EARS com exemplo WHEN/THEN, a prova de cada um (teste nomeado), os arquivos (`touches`) e `## Evidence path` (afirmação, caminho de prova, por que esse caminho; segue a skill `verification-planning`).
-2. `ExitPlanMode`: a aprovação é o gate (o humano pode editar o plano com Ctrl+G). Aprovado: `cp <arquivo de plano que o plan mode informou> ~/.pipe/missions/<id>/SPEC.md`. O plan mode não deixa gravar antes da aprovação, então as linhas `gate.ask` (campo c: `ExitPlanMode`), `gate.answer` e `pin` saem **depois**, retroativas, com o hash do `SPEC.md` copiado; a evidência do clique é o registro do hook em `~/.pipe/asks.jsonl` (`tool_response.plan`). Se o plano aprovado difere do texto do plano que você escreveu, o `SPEC.md` é o aprovado.
+1. A pasta da missão já existe (o plan mode bloqueia escrita). `EnterPlanMode` e escreva o plano: **o diff em 1 frase**, `R1` a `R3` em EARS com exemplo WHEN/THEN, a prova de cada um (um teste nomeado **com o título começando pelo id**, por exemplo `R1: shout grita o texto em maiúsculas`), os arquivos (`touches`) e `## Evidence path` (afirmação, caminho de prova, por que esse caminho; segue a skill `verification-planning`).
+2. `ExitPlanMode`: a aprovação é o gate (o humano pode editar o plano com Ctrl+G). Aprovado: `cp <arquivo de plano que o plan mode informou> ~/.pipe/missions/<id>/SPEC.md`. O plan mode não deixa gravar antes da aprovação, então as linhas `gate.ask` (canal `ExitPlanMode`), `gate.answer` (rótulo `Aprovar (retroativo)`) e `pin` saem **depois**, nas colunas da tabela da skill `pipe`, com o hash do `SPEC.md` copiado; a evidência do clique é o registro do hook em `~/.pipe/asks.jsonl` (`tool_response.plan`). Se o plano aprovado difere do texto do plano que você escreveu, o `SPEC.md` é o aprovado.
 3. Crie `slices/s1/SPEC.md` com o frontmatter `id: s1`, `repo`, `kind: code` (ou `bug`), `depends_on: []`, `touches: [...]`, `base`, e no corpo os `R#` e o critério de pronto.
 4. Pins: `SPEC.md` e `slices/s1/SPEC.md`. Linha `s1` na tabela do MISSION.md com status `planned`.
 
 ## Médio
 
-1. Chame a skill `plan` com o texto do `INTAKE.md`: ela consulta o `architect`, aplica `verification-planning` e abre o plan mode. A aprovação é o gate.
+1. Chame a skill `plan` com o texto do `INTAKE.md`, pedindo que a prova de cada `R#` seja um teste com o título começando pelo id (`R1: ...`): ela consulta o `architect`, aplica `verification-planning` e abre o plan mode. A aprovação é o gate.
 2. Aprovado: mesma cópia (`SPEC.md`), mesmo `slices/s1/SPEC.md`, mesmos pins. Uma slice só. Se o plano revelar 3 ou mais partes independentes, pergunte se sobe para Complexo.
 
 ## Complexo

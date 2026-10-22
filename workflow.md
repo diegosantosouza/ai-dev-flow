@@ -440,14 +440,16 @@ A skill `pipe` confere isso no preflight e para se faltar algo.
 
 - Skill é instrução, não enforcement.
 - O harness garante: AskUserQuestion e plan mode só na sessão principal; isolamento de worktree do builder; sandbox; regras `ask` e `deny`.
-- Vira detecção: a resposta do gate é copiada pelo modelo para o ledger. O hook do `/pipe` grava cada resposta em `~/.pipe/asks.jsonl` para auditoria.
-- Validator e reviewer usam `/usr/bin/git` e `/usr/bin/grep` por causa do hook global que trunca a saída.
+- Vira detecção: a resposta do gate é copiada pelo modelo para o ledger. O hook do `/pipe` grava cada resposta em `~/.pipe/asks.jsonl` (um registro JSON por linha, com `ts` e `session_id`; precisa do `jq`) para auditoria. O arquivo é de todas as missões: associe um registro a uma missão pelo `session_id` e pelo marcador `[pipe <id> gate ...]` no texto da pergunta.
+- O ledger tem colunas fixas por evento (a tabela está em `skills/pipe/SKILL.md`), e o gate mostra no texto o hash do artefato, copiado do `shasum`.
+- Builder, validator e reviewer usam `/usr/bin/git` e `/usr/bin/grep` por causa do hook global que trunca a saída. O builder também roda um comando simples por chamada, porque a trava do worktree recusa comando composto.
+- O validator varre o intervalo de commits com `gitleaks` (`brew install gitleaks`). Sem ele, a checagem de segredos é só por padrão e vira lacuna declarada.
 
 > **Instalação:** rodar `install.sh` religa os agents `pipe-*` em `~/.claude/agents`, que hoje apontam para outro repo. Não rode com um run de sessão do runtime antigo ativo.
 
 ### Lint
 
-`scripts/validate-pipe.sh [repo-raiz]` checa S1 a S8 (o S8 exige `/usr/bin/git` também nas skills, porque o orquestrador roda na sessão principal, onde o mesmo hook trunca a saída): frontmatter permitido, flags de invocação, resíduos do motor antigo, `maxTurns` e limites de ferramenta, `pipe-*` citados que existem, tamanho das skills (16000 bytes), `/usr/bin/git`/`/usr/bin/grep` no builder, no validator e no reviewer (o hook global reescreve o git curto e a trava do worktree recusa a forma reescrita), e nenhum `cd` solto nas skills (o Bash mantém o diretório, e o `isolation: worktree` falha fora do repo). Roda no pre-commit quando um agent, uma skill ou o próprio script `pipe` é alterado.
+`scripts/validate-pipe.sh [repo-raiz]` checa S1 a S9 (o S9 garante que continuem no texto as regras que as primeiras F1 mostraram ser necessárias: colunas do ledger, prefixo `R#` no título do teste, um comando simples por chamada, `gitleaks` e o hash copiado do `shasum`; o S8 exige `/usr/bin/git` também nas skills, porque o orquestrador roda na sessão principal, onde o mesmo hook trunca a saída): frontmatter permitido, flags de invocação, resíduos do motor antigo, `maxTurns` e limites de ferramenta, `pipe-*` citados que existem, tamanho das skills (16000 bytes), `/usr/bin/git`/`/usr/bin/grep` no builder, no validator e no reviewer (o hook global reescreve o git curto e a trava do worktree recusa a forma reescrita), e nenhum `cd` solto nas skills (o Bash mantém o diretório, e o `isolation: worktree` falha fora do repo). Roda no pre-commit quando um agent, uma skill ou o próprio script `pipe` é alterado.
 
 ## Fontes
 

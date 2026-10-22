@@ -14,6 +14,8 @@
 #   S6  the builder, the validator and the reviewer call /usr/bin/git and /usr/bin/grep, never the bare commands
 #   S7  no bare `cd <path>` in the skills (a subshell or an absolute path instead)
 #   S8  no bare git command in the skills either (the orchestrator is hit by the same hook)
+#   S9  the rules the first F1 runs showed to be necessary are still in the text (ledger columns, R# prefix,
+#       one simple command per call, gitleaks, hash copied from shasum)
 # Sources: https://code.claude.com/docs/en/skills , https://code.claude.com/docs/en/sub-agents
 set -euo pipefail
 
@@ -163,6 +165,23 @@ for s in $PIPE_SKILLS; do
     fail "S8 skills/$s: bare git command (use /usr/bin/git)"
   fi
 done
+
+# --- S9: the rules the F1 runs showed to be necessary stay in the text -----------------------------
+# Behavior is not lintable, but dropping the sentence that asks for it is. Each row: file, fixed string, why.
+
+require() { # <file> <fixed string> <why>
+  [ -f "$1" ] || return 0
+  grep -q -F -- "$2" "$1" || fail "S9 ${1#"$ROOT"/}: missing '$2' ($3)"
+}
+require "$SKILLS_DIR/pipe/SKILL.md" 'Colunas fixas por evento' 'the ledger columns drifted between runs'
+require "$SKILLS_DIR/pipe/SKILL.md" '`pequeno`, `medio` ou `complexo`' 'level values must be canonical'
+require "$SKILLS_DIR/pipe/SKILL.md" 'O gate `nivel` também vai ao ledger' 'the level gate was missing from the ledger'
+require "$SKILLS_DIR/pipe/SKILL.md" 'cut -c1-12' 'the gate hash must be copied from shasum, not typed'
+require "$SKILLS_DIR/pipe-spec/SKILL.md" 'título começando pelo id' 'test titles carry the R# so the validator can trace them'
+require "$AGENTS_DIR/pipe-builder.md" 'começa pelo id do requisito' 'the builder must prefix test titles with the R#'
+require "$AGENTS_DIR/pipe-builder.md" 'Um comando simples por chamada' 'the worktree guard refuses compound commands'
+require "$AGENTS_DIR/pipe-validator.md" 'gitleaks git --log-opts' 'the validator runs gitleaks over the range'
+require "$AGENTS_DIR/pipe-validator.md" 'nunca reduzir esta lista' 'the brief may add checks, never remove them'
 
 if [ "$ERRORS" -gt 0 ]; then
   echo ""
