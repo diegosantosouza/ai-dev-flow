@@ -182,6 +182,7 @@ require "$AGENTS_DIR/pipe-builder.md" 'começa pelo id do requisito' 'the builde
 require "$AGENTS_DIR/pipe-builder.md" 'Um comando simples por chamada' 'the worktree guard refuses compound commands'
 require "$AGENTS_DIR/pipe-validator.md" 'gitleaks git --log-opts' 'the validator runs gitleaks over the range'
 require "$AGENTS_DIR/pipe-validator.md" 'nunca reduzir esta lista' 'the brief may add checks, never remove them'
+require "$SKILLS_DIR/pipe/SKILL.md" 'PreToolUse' 'the hook that blocks a bare cd was removed'
 
 if [ "$ERRORS" -gt 0 ]; then
   echo ""
