@@ -191,6 +191,10 @@ require "$AGENTS_DIR/pipe-researcher.md" 'Grave cedo e por seção' 'the researc
 require "$AGENTS_DIR/pipe-specifier.md" 'Grave cedo e por seção' 'the specifier must write the file early'
 require "$AGENTS_DIR/pipe-planner.md" 'Grave cedo e por seção' 'the planner must write the file early'
 require "$SKILLS_DIR/pipe-spec/SKILL.md" 'o artefato **não está pronto**' 'a partial return must not pass the gate'
+require "$SKILLS_DIR/pipe/SKILL.md" 'Cartão de leitura' 'the human must see the artifact paths before each gate'
+require "$SKILLS_DIR/pipe-spec/SKILL.md" 'Cartão:' 'spec gates must list the files to read'
+require "$SKILLS_DIR/pipe-build/SKILL.md" 'Cartão:' 'build gates must list the files to read'
+require "$SKILLS_DIR/pipe-verify/SKILL.md" 'Cartão:' 'verify gates must list the files to read'
 
 if [ "$ERRORS" -gt 0 ]; then
   echo ""

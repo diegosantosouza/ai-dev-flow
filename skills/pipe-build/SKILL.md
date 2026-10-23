@@ -13,7 +13,7 @@ Missão: **$ARGUMENTS** (pasta `~/.pipe/missions/$ARGUMENTS/`).
 
 ## 1. Pré-condições (todas, nesta ordem)
 
-1. **Pins:** `( cd ~/.pipe/missions/$ARGUMENTS && shasum -a 256 -c --strict pins/*.sha256 )`. Se falhar, **não despache**: pergunte (`[pipe <id> gate pin]`) refazer o gate do artefato que mudou (volta à `pipe-spec`) ou parar.
+1. **Pins:** `( cd ~/.pipe/missions/$ARGUMENTS && shasum -a 256 -c --strict pins/*.sha256 )`. Se falhar, **não despache**: pergunte (`[pipe <id> gate pin]`; `Cartão:` o artefato que mudou e o `pins/<arquivo>.sha256` dele) refazer o gate do artefato que mudou (volta à `pipe-spec`) ou parar.
 2. **Repo e sandbox:** a sessão está dentro do repo do slice (`/usr/bin/git rev-parse --show-toplevel` bate com `repo:`); se não, peça para abrir a sessão nesse repo e rodar `/pipe resume`. `jq -e '.sandbox.enabled == true' <repo>/.claude/settings.local.json` precisa passar; senão pare e mostre o envelope do `/pipe` (passo 2.5).
 3. **Nada rodando:** nenhum `dispatch` sem `return` no ledger.
 
@@ -48,12 +48,12 @@ Em reexecução (achados do verify ou nota do humano), acrescente uma seção `A
 Salve a última mensagem em `handoffs/NN-builder-<s>.report.md`, sem reescrever. Leia o bloco `STATUS`. Atualize a linha do slice no MISSION.md (branch, sha, status `built`). Grave `return`.
 
 - `DONE` ou `DONE_WITH_CONCERNS`: confira `shasum -c --strict pins/*.sha256` de novo (o builder não pode ter tocado nos artefatos) e vá ao passo 6.
-- `BLOCKED` com **`capability:`**: ofereça só opções que cabem no envelope: "Faço fora e deixo nota" (o humano roda o comando exato do relatório), "Assumir o slice", "Replanejar", "Parar". **Nunca ofereça afrouxar o sandbox**, a rede nem as permissões. Em "Faço fora e deixo nota": marque o slice `waiting-human` no MISSION.md, grave `mission.stop` (motivo: o que o humano vai fazer) e aplique a regra de **Parada** da skill `pipe` (`status: stopped`, `next: pipe-build`); o `/pipe resume` retoma daí.
+- `BLOCKED` com **`capability:`** (`Cartão:` `handoffs/NN-builder-<s>.report.md` e `slices/<s>/SPEC.md`): ofereça só opções que cabem no envelope: "Faço fora e deixo nota" (o humano roda o comando exato do relatório), "Assumir o slice", "Replanejar", "Parar". **Nunca ofereça afrouxar o sandbox**, a rede nem as permissões. Em "Faço fora e deixo nota": marque o slice `waiting-human` no MISSION.md, grave `mission.stop` (motivo: o que o humano vai fazer) e aplique a regra de **Parada** da skill `pipe` (`status: stopped`, `next: pipe-build`); o `/pipe resume` retoma daí.
 - `BLOCKED` ou `NEEDS_CONTEXT` com **`content:Q<n>`**: pergunte a `Q<n>` com as opções do relatório; a resposta vira `D<n>` em `DECISIONS.md` › Decididas (`gate.answer` no ledger) e o slice volta ao passo 3.
 
 ## 5. Falhas
 
-Cada retorno `BLOCKED` e cada veredito `BLOCKING` do verify soma 1 em `falhas` na tabela do MISSION.md. **Duas falhas seguidas no mesmo slice param a missão**: pergunte (`[pipe <id> gate falhas]`) subir o modelo do builder (o agent roda com `model: opus` na chamada), replanejar, assumir ou parar. O contador **não zera** com um "aprovar".
+Cada retorno `BLOCKED` e cada veredito `BLOCKING` do verify soma 1 em `falhas` na tabela do MISSION.md. **Duas falhas seguidas no mesmo slice param a missão**: pergunte (`[pipe <id> gate falhas]`; `Cartão:` os 2 últimos `handoffs/NN-builder-<s>.report.md` e `proof/<s>/verdict.md`) subir o modelo do builder (o agent roda com `model: opus` na chamada), replanejar, assumir ou parar. O contador **não zera** com um "aprovar".
 
 ## 6. Encadeamento
 

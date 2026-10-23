@@ -35,7 +35,7 @@ REPORT: proof/<s>/verdict.md
 
 Grave `dispatch` e chame a ferramenta Agent com `subagent_type: pipe-validator` (sem `name`). Salve o retorno em `handoffs/NN-validator-<s>.report.md` e grave `return`.
 
-**Contrato de prova (confira antes do veredito):** `ls ~/.pipe/missions/<id>/proof/<s>/ ~/.pipe/missions/<id>/proof/<s>/raw/` precisa mostrar o `qa-*.md`, o `verdict.md` e um arquivo em `raw/` para **cada linha OK ou FAIL** da tabela do `verdict.md`, que tem uma linha por checagem de 0 a 10. Linha OK sem arquivo de saída, checagem faltando ou `qa-*.md` ausente: a prova está incompleta. Pergunte (`[pipe <id> gate prova <s>]`, com o hash literal do `verdict.md`): redespachar o validator só com as checagens faltantes (Recomendado) / aceitar com a lacuna declarada no gate / Parar. Nunca trate prova incompleta como PASS sem essa pergunta.
+**Contrato de prova (confira antes do veredito):** `ls ~/.pipe/missions/<id>/proof/<s>/ ~/.pipe/missions/<id>/proof/<s>/raw/` precisa mostrar o `qa-*.md`, o `verdict.md` e um arquivo em `raw/` para **cada linha OK ou FAIL** da tabela do `verdict.md`, que tem uma linha por checagem de 0 a 10. Linha OK sem arquivo de saída, checagem faltando ou `qa-*.md` ausente: a prova está incompleta. Pergunte (`[pipe <id> gate prova <s>]`, com o hash literal do `verdict.md`; `Cartão:` `proof/<s>/verdict.md`, `proof/<s>/qa-*.md` e a pasta `proof/<s>/raw/`): redespachar o validator só com as checagens faltantes (Recomendado) / aceitar com a lacuna declarada no gate / Parar. Nunca trate prova incompleta como PASS sem essa pergunta.
 
 **Veredito:** leia só a **primeira linha** de `proof/<s>/verdict.md`. Vale se for `VERDICT: PASS sha=<H>` ou `VERDICT: BLOCKING sha=<H>` com **H igual ao sha do slice**. Arquivo ausente, linha ilegível ou sha diferente é **BLOCKING**. Confira também `( cd ~/.pipe/missions/<id> && shasum -a 256 -c --strict pins/*.sha256 )`. Grave `verdict` no ledger.
 
@@ -45,7 +45,7 @@ Se o veredito é PASS e o nível é Médio ou Complexo, despache `pipe-reviewer`
 
 ## 3. Gate de build (por slice)
 
-Pergunta `[pipe <id> gate build <s>]`, com o hash curto (12 caracteres) de `proof/<s>/verdict.md` **escrito no texto** (nunca "hash do ledger"): veredito, sha curto, nº de arquivos (`/usr/bin/git -C <R> diff --name-only <B>...<H>`), nº de achados do reviewer.
+Pergunta `[pipe <id> gate build <s>]`, com o hash curto (12 caracteres) de `proof/<s>/verdict.md` **escrito no texto** (nunca "hash do ledger"): veredito, sha curto, nº de arquivos (`/usr/bin/git -C <R> diff --name-only <B>...<H>`), nº de achados do reviewer. `Cartão:` `proof/<s>/verdict.md`, `proof/<s>/qa-*.md`, `proof/<s>/review.md`, `proof/<s>/security.md` (com `risk: true`) e a linha `Diff: /usr/bin/git -C <W> diff <B>...<H>`.
 
 - **PASS:** Aceitar (Recomendado) / Pedir mudanças / Assumir / Parar.
 - **BLOCKING:** Voltar ao builder com os achados (Recomendado) / Assumir / Parar. Não existe "aceitar" com BLOCKING.
@@ -62,7 +62,7 @@ Quando todos os slices estão `accepted`:
 
 ## 5. Entrega
 
-Resuma em poucas linhas: slices aceitos, vereditos, achados abertos e o `EVIDENCE.md`. Pergunta `[pipe <id> gate entrega]`, com o hash curto de `proof/EVIDENCE.md` **escrito no texto**:
+Resuma em poucas linhas: slices aceitos, vereditos, achados abertos e o `EVIDENCE.md`. Pergunta `[pipe <id> gate entrega]`, com o hash curto de `proof/EVIDENCE.md` **escrito no texto** (`Cartão:` `proof/EVIDENCE.md`, `proof/review-integrated.md` no Complexo e o `proof/<s>/verdict.md` de cada slice):
 
 - **Entregar com `/housi-ship <KEY>` (Recomendado em repo Housi com chave Jira):** **não invoque.** Mostre a linha para o humano digitar e a lista de branches (`pipe/<missão>/<slice>`); push e PR são atos dele.
 - **Exportar:** `/usr/bin/git -C <R> format-patch <B>..<H> -o ~/.pipe/missions/<id>/export/<s>` por slice.
