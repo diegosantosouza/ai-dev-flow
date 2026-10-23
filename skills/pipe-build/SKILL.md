@@ -41,7 +41,7 @@ REPORT: inline
 WORKTREE: <pwd>  BRANCH: <branch>  SHA: <sha>
 ```
 
-Em reexecução (achados do verify ou nota do humano), acrescente uma seção `Achados a corrigir` com o texto deles. Grave `dispatch`. **Imediatamente antes de cada chamada Agent**, rode `/usr/bin/git rev-parse --show-toplevel` (sem `cd`): tem de dar o `repo:` do slice. Se não der, a sessão saiu do repo; não despache, volte ao repo com um caminho absoluto e confira de novo. Então chame a ferramenta Agent com `subagent_type: pipe-builder`, `isolation: "worktree"` na própria chamada, **sem `name`** (com `name` a chamada vira teammate e o isolamento do frontmatter deixa de valer) e o texto do brief como prompt. Os dois slices em paralelo vão na mesma mensagem. O builder roda em segundo plano: **não abra gate de um slice enquanto o builder dele roda**.
+Em reexecução (achados do verify ou nota do humano), acrescente uma seção `Achados a corrigir` com o texto deles. Em redespacho depois de um despacho órfão (`/pipe resume`), acrescente `Motivo da reexecução`: o dispatch sem `return` e o que havia de worktree e branch. Grave `dispatch`. **Imediatamente antes de cada chamada Agent**, rode `/usr/bin/git rev-parse --show-toplevel` (sem `cd`): tem de dar o `repo:` do slice. Se não der, a sessão saiu do repo; não despache, volte ao repo com um caminho absoluto e confira de novo. Então chame a ferramenta Agent com `subagent_type: pipe-builder`, `isolation: "worktree"` na própria chamada, **sem `name`** (com `name` a chamada vira teammate e o isolamento do frontmatter deixa de valer) e o texto do brief como prompt. Os dois slices em paralelo vão na mesma mensagem. O builder roda em segundo plano: **não abra gate de um slice enquanto o builder dele roda**.
 
 ## 4. Retorno
 

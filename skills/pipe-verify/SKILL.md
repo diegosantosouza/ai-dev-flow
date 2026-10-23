@@ -41,7 +41,7 @@ Grave `dispatch` e chame a ferramenta Agent com `subagent_type: pipe-validator` 
 
 ## 2. Revisão
 
-Se o veredito é PASS e o nível é Médio ou Complexo, despache `pipe-reviewer` com o brief (diff `B...H`, SPEC do slice, a prova do validator). Ele não escreve arquivo: **você** grava a última mensagem em `proof/<s>/review.md`. Missão `risk: true`: despache também o agent `security-auditor` sobre `B..H`, e salve o relatório em `proof/<s>/security.md`. Achado BLOCKING com evidência reproduzível torna o veredito do slice BLOCKING.
+Se o veredito é PASS e o nível é Médio ou Complexo, despache `pipe-reviewer` com o brief (diff `B...H`, SPEC do slice, a prova do validator). Ele não escreve arquivo: **você** grava `dispatch`, depois a última mensagem em `handoffs/NN-reviewer-<s>.report.md` (sem reescrever), uma cópia em `proof/<s>/review.md` e `return`. Missão `risk: true`: despache também o agent `security-auditor` sobre `B..H`, e salve o relatório em `proof/<s>/security.md`. Achado BLOCKING com evidência reproduzível torna o veredito do slice BLOCKING.
 
 ## 3. Gate de build (por slice)
 

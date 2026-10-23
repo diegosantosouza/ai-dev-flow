@@ -183,6 +183,9 @@ require "$AGENTS_DIR/pipe-builder.md" 'Um comando simples por chamada' 'the work
 require "$AGENTS_DIR/pipe-validator.md" 'gitleaks git --log-opts' 'the validator runs gitleaks over the range'
 require "$AGENTS_DIR/pipe-validator.md" 'nunca reduzir esta lista' 'the brief may add checks, never remove them'
 require "$SKILLS_DIR/pipe/SKILL.md" 'PreToolUse' 'the hook that blocks a bare cd was removed'
+require "$SKILLS_DIR/pipe/SKILL.md" 'gate despacho' 'the orphan-dispatch question at resume must be a ledger gate'
+require "$SKILLS_DIR/pipe-build/SKILL.md" 'Motivo da reexecução' 'a redispatch brief must say why'
+require "$SKILLS_DIR/pipe-verify/SKILL.md" 'NN-reviewer-<s>.report.md' 'the reviewer report belongs in handoffs'
 
 if [ "$ERRORS" -gt 0 ]; then
   echo ""

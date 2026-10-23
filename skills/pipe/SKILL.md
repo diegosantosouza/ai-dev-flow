@@ -101,7 +101,7 @@ Grave `mission.open` no ledger e invoque a skill `pipe-spec` com o id como argum
 
 ### 6. Resume
 
-Leia o MISSION.md e `tail -n 30 ledger.md`; confira `( cd ~/.pipe/missions/<id> && shasum -a 256 -c --strict pins/*.sha256 )` (falha: mostre qual artefato mudou e pergunte: refazer o gate dele, ou parar). Se o último evento de despacho não tem `return` correspondente, **nunca despache de novo às cegas**: pergunte (esperar o retorno, despachar de novo, assumir o slice, parar).
+Leia o MISSION.md e `tail -n 30 ledger.md`; confira `( cd ~/.pipe/missions/<id> && shasum -a 256 -c --strict pins/*.sha256 )` (falha: mostre qual artefato mudou e pergunte: refazer o gate dele, ou parar). Se o último evento de despacho não tem `return` correspondente, **nunca despache de novo às cegas**: pergunte (esperar o retorno, despachar de novo, assumir o slice, parar). Essa pergunta é um gate: `[pipe <id> gate despacho]` com o hash do brief órfão (`shasum -a 256 <brief> | cut -c1-12`, copiado) **escrito no texto**; grave `gate.ask` ao perguntar e `gate.answer` ao receber o clique (canal AskUserQuestion), antes de qualquer `dispatch`. Em "despachar de novo", o brief novo leva a seção `Motivo da reexecução` (o dispatch órfão e o estado do worktree).
 
 Se há um slice `waiting-human` (o humano ficou de fazer algo fora, em geral o commit no worktree), pergunte se já foi feito. Se sim: leia `/usr/bin/git -C <WORKTREE do relatório> rev-parse HEAD`, confira que a branch é a esperada (`pipe/<id>/<slice>`), que `/usr/bin/git -C <WORKTREE> status --short` está limpo e que o HEAD é diferente da base; grave `return` com esse sha, marque o slice `built` e invoque `pipe-verify` com `<id> <slice>`. Se não, volte a perguntar quando ele quiser retomar.
 
