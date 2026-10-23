@@ -186,6 +186,11 @@ require "$SKILLS_DIR/pipe/SKILL.md" 'PreToolUse' 'the hook that blocks a bare cd
 require "$SKILLS_DIR/pipe/SKILL.md" 'gate despacho' 'the orphan-dispatch question at resume must be a ledger gate'
 require "$SKILLS_DIR/pipe-build/SKILL.md" 'Motivo da reexecução' 'a redispatch brief must say why'
 require "$SKILLS_DIR/pipe-verify/SKILL.md" 'NN-reviewer-<s>.report.md' 'the reviewer report belongs in handoffs'
+require "$AGENTS_DIR/pipe-designer.md" 'Grave cedo e por seção' 'the designer must write the file early, turns are finite'
+require "$AGENTS_DIR/pipe-researcher.md" 'Grave cedo e por seção' 'the researcher must write the file early'
+require "$AGENTS_DIR/pipe-specifier.md" 'Grave cedo e por seção' 'the specifier must write the file early'
+require "$AGENTS_DIR/pipe-planner.md" 'Grave cedo e por seção' 'the planner must write the file early'
+require "$SKILLS_DIR/pipe-spec/SKILL.md" 'o artefato **não está pronto**' 'a partial return must not pass the gate'
 
 if [ "$ERRORS" -gt 0 ]; then
   echo ""

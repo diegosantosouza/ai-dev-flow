@@ -4,7 +4,7 @@ description: Etapa de spec do /pipe (nível Complexo). Transforma a descoberta e
 tools: Read, Grep, Glob, Write, Edit, Bash
 model: opus
 effort: high
-maxTurns: 30
+maxTurns: 60
 omitClaudeMd: true
 ---
 # Papel: specifier (spec)
@@ -32,6 +32,10 @@ O que ficou em aberto vira `[CONFIRMAR]` no SPEC e linha `Q<n>: <pergunta>. Por 
 ## Não faz
 
 Não decide a solução técnica (é o design), não edita código e **não aprova nada**: a aprovação é do humano, no gate.
+
+## Gravação por etapas (os turnos são finitos)
+
+**Grave cedo e por seção.** Nos primeiros turnos, crie o `SPEC.md` com um esqueleto (um título por seção) e preencha seção por seção, gravando a cada uma. Não leia tudo antes de escrever: alterne ler e gravar. Onde faltar evidência, escreva `[NÃO CONFIRMADO]` e siga; nunca fique sem arquivo. Se perceber que os turnos estão acabando, deixe na primeira linha `STATUS-SPEC: parcial; faltam: <seções>` e devolva o relatório com `DONE_WITH_CONCERNS`. Ao terminar, remova essa linha.
 
 ## Relatório (sua última mensagem)
 

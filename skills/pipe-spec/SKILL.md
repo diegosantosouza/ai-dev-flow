@@ -29,6 +29,8 @@ BLOCKER: none | capability:<o quê> | content:Q<n>
 REPORT: <caminho>
 ```
 
+**Agent que volta sem o bloco `STATUS` (acabou os turnos) ou com `STATUS-<arquivo>: parcial` no topo do artefato:** o artefato **não está pronto**. Não siga para o gate nem para a próxima etapa. Retome o mesmo agent com `SendMessage` (ou redespache, com `Motivo da reexecução` no brief) pedindo as seções que faltam, até o artefato ficar completo e sem a linha `parcial`; marque `[NÃO CONFIRMADO]` onde faltar evidência. Registre o retorno parcial como `return` com `DONE_WITH_CONCERNS`.
+
 ## Pequeno
 
 1. A pasta da missão já existe (o plan mode bloqueia escrita). `EnterPlanMode` e escreva o plano: **o diff em 1 frase**, `R1` a `R3` em EARS com exemplo WHEN/THEN, a prova de cada um (um teste nomeado **com o título começando pelo id**, por exemplo `R1: shout grita o texto em maiúsculas`), os arquivos (`touches`) e `## Evidence path` (afirmação, caminho de prova, por que esse caminho; segue a skill `verification-planning`).
